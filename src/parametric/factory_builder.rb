@@ -25,7 +25,7 @@ module Parametric
 				@factory_class = a_factory_class
 			end
 
-			def build_factory( **init_params = nil, &blk)
+			def build_factory( **init_params, &blk)
 				@factory = @factory_class.new **init_params
 				class_eval &blk if block_given?
 				@factory
@@ -34,10 +34,11 @@ module Parametric
 			def method_missing(method_name, *args, &blk)
 				builder = Parametric.find_builder method_name
 				if builder
-					@factory.params.set(method_name) { builder.build_factory.build(self) }
+					factory = builder.build_factory(&blk)
+					@factory.params.set(method_name) { factory.build(self) }
 				else
 					if method_name.match /^[a-zA-Z_]+$/
-						@factory.params.set method_name. args.first, &blk
+						@factory.params.set method_name, args.first, &blk
 					else
 						raise "Unknown builder #{method_name} or invalid factory param name"
 					end

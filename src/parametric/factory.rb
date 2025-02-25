@@ -25,7 +25,7 @@ module Parametric
 		end
 
 		def build(environ = nil, **build_params)
-			environ ||= environ.new
+			environ ||= Environ.new
 			environ.unshift(params)
 			environ.unshift(Params.new **build_params) if build_params.any?
 			check_required_params(environ)
