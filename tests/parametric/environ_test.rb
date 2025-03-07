@@ -1,5 +1,6 @@
 require 'minitest/autorun'
-require_relative '../../src/parametric'
+require_relative '../../src/parametric/lib/params'
+require_relative '../../src/parametric/lib/environ'
 
 class EnvironTest < Minitest::Test
 

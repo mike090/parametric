@@ -1,3 +1,6 @@
+require_relative 'params'
+require_relative 'environ'
+
 module Parametric
 	class Factory
 		class << self
@@ -17,11 +20,11 @@ module Parametric
 		end
 
 		def initialize(**init_params)
-			@params = Params.new **init_params
+			@params = Parametric::Params.new **init_params
 		end
 
 		def params
-			@params ||= Params.new
+			@params ||= Parametric::Params.new
 		end
 
 		def build(environ = nil, **build_params)

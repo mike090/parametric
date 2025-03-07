@@ -1,5 +1,6 @@
 require 'minitest/autorun'
-require_relative '../../src/parametric'
+require_relative '../../src/parametric/lib/factory'
+require_relative '../../src/parametric/lib/factory_builder'
 
 class FactoryBuilderTest < Minitest::Test
 	attr_accessor :subject, :factory_class

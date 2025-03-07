@@ -1,5 +1,7 @@
 require 'minitest/autorun'
-require_relative '../../src/parametric'
+require_relative '../../src/parametric/lib/params'
+require_relative '../../src/parametric/lib/environ'
+require_relative '../../src/parametric/lib/factory'
 
 class FactoryTest < Minitest::Test
 	def test_requered_params_inheritance

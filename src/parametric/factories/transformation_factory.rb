@@ -1,4 +1,4 @@
-require_relative 'factory'
+require_relative '../lib/factory'
 
 module Parametric
 	class TransformationFactory < Factory
