@@ -1,9 +1,9 @@
-require 'minitest/autorun'
+require "testup/testcase"
 require_relative '../../src/parametric/lib/params'
 require_relative '../../src/parametric/lib/environ'
 require_relative '../../src/parametric/lib/factory'
 
-class FactoryTest < Minitest::Test
+class TC_Factory < TestUp::TestCase
 	def test_requered_params_inheritance
 		base_factory_class = Class.new Parametric::Factory
 		base_factory_class.required_params :color

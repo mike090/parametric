@@ -1,7 +1,7 @@
-require 'minitest/autorun'
+require "testup/testcase"
 require_relative '../../src/parametric/lib/params'
 
-class ParamsTest < Minitest::Test
+class TC_Params < TestUp::TestCase
 	
 	attr_accessor :subject
 

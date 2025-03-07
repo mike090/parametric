@@ -1,8 +1,8 @@
-require 'minitest/autorun'
+require "testup/testcase"
 require_relative '../../src/parametric/lib/params'
 require_relative '../../src/parametric/lib/environ'
 
-class EnvironTest < Minitest::Test
+class TC_Environ < TestUp::TestCase
 
 	attr_accessor :subject
 	
@@ -21,12 +21,11 @@ class EnvironTest < Minitest::Test
 		assert_equal 'rect', subject.shape
 	end
 
-	def test_param?
+	def test_param_defined
 		params = Parametric::Params.new
 		params.set 'color', :red
 		subject.unshift params
 		assert subject.color?
-		# assert_instance_of Object, subject
 		refute subject.shape?
 	end
 

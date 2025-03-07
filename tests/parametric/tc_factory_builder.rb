@@ -1,8 +1,8 @@
-require 'minitest/autorun'
+require "testup/testcase"
 require_relative '../../src/parametric/lib/factory'
 require_relative '../../src/parametric/lib/factory_builder'
 
-class FactoryBuilderTest < Minitest::Test
+class TC_FactoryBuilder < TestUp::TestCase
 	attr_accessor :subject, :factory_class
 
 	def setup
