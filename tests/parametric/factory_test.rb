@@ -25,6 +25,18 @@ class FactoryTest < Minitest::Test
 		assert_equal 'color: red, shape: rect, size: medium', data
 	end
 
+	def test_params_overloading
+		environ = Parametric::Environ.new
+		environ.unshift(Parametric::Params.new color: :red)
+		factory_class = Class.new Parametric::Factory
+		factory_class.define_method(:do_build) do |environ|
+			"color: #{environ.color}"
+		end
+		assert_equal 'color: red', factory_class.new.build(environ)
+		assert_equal 'color: green', factory_class.new(color: :green).build(environ)
+		assert_equal 'color: blue', factory_class.new(color: :green).build(environ, color: :blue)
+	end
+
 	def test_required_params_checking
 		factory_class = Class.new Parametric::Factory
 		factory_class.required_params :color
