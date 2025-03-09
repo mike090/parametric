@@ -25,11 +25,11 @@ module Parametric
 			private
 
 			def x_axis_directed_along(value = nil, &block)
-				@factory.params.set :x_direction, value, &block
+				@factory.set_param :x_direction, value, &block
 			end
 
 			def y_axis_directed_along(value = nil, &block)
-				@factory.params.set :y_direction, value, &block
+				@factory.set_param :y_direction, value, &block
 			end
 		end
 	end
