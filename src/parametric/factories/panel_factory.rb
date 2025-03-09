@@ -20,4 +20,8 @@ module Parametric
 			panel
 		end
 	end
+
+	class PanelFactoryBuilder < Parametric::FactoryBuilder
+		factory_class PanelFactory
+	end
 end

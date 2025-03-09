@@ -12,6 +12,7 @@ module Parametric
 			entity = draw(environ)
 			entity.transform!(params.get :position, environ) if entity.respond_to?(:transform!) &&
 																														params.defined?(:position)
+			entity
 		end
 
 		def draw(environ)
