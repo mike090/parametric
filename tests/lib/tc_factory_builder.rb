@@ -8,6 +8,7 @@ class TC_FactoryBuilder < TestUp::TestCase
 	def setup
 		self.subject = Class.new Parametric::FactoryBuilder
 		self.factory_class = Class.new Parametric::Factory
+		factory_class.define_method(:do_build) { |environ| params.get :color }
 		subject.factory_class factory_class
 	end
 
@@ -22,14 +23,14 @@ class TC_FactoryBuilder < TestUp::TestCase
 		assert_equal 'test_value', subject.test_attr
 	end
 
-	def test_with_inital_params
-		factory = subject.build_factory color: 'red'
-		assert_equal 'red', factory.params.get(:color)
+	def test_initalize_with_params
+		factory = subject.build_factory(color: 'red')
+		assert_equal 'red', factory.build
 	end
 
-	def test_with_property_as_value
+	def test_initialize_with_block
 		factory = subject.build_factory() { color :red }
-		assert_equal :red, factory.params.get(:color)
+		assert_equal :red, factory.build
 	end
 
 	def test_with_invalid_property

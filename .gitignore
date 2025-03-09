@@ -1,0 +1,4 @@
+.rubocop.yml
+.skippy/
+Gemfile*
+skippy.json

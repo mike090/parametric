@@ -10,7 +10,11 @@ module Parametric
 		end
 
 		def do_build(environ)
-			Geom::Transformation.new environ.origin, environ.x_direction, environ.y_direction
+			Geom::Transformation.new(
+				params.get(:origin, environ),
+				params.get(:x_direction, environ),
+				params.get(:y_direction, environ)
+			)
 		end
 	end
 

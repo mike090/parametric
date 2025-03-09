@@ -23,7 +23,12 @@ module Parametric
 			store.include? name.to_sym
 		end
 
-		private
+		def expand_with!(params)
+			store.merge! params.store.except(*store.keys)
+			self
+		end
+
+		protected
 
 		def store
 			@store ||= {}

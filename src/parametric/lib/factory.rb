@@ -13,39 +13,49 @@ module Parametric
 				end
 			end
 
-			def check_required_params(environ)
-				missing = required_params.reject { |param| environ.defined? param }
+			def check_required_params(params)
+				missing = required_params.reject { |param| params.defined? param }
 				raise "Required params #{missing.join ', '} missing" unless missing.empty?
 			end
 		end
 
 		def initialize(**init_params)
-			@params = Parametric::Params.new **init_params
+			@factory_params = Parametric::Params.new **init_params
 		end
 
-		def params
-			@params ||= Parametric::Params.new
+		def set_param(name, value = nil, &block)
+			@factory_params.set name, value, &block
 		end
 
 		def build(environ = nil, **build_params)
 			environ ||= Parametric::Environ.new
-			environ.unshift(params)
-			environ.unshift(Params.new **build_params) if build_params.any?
-			check_required_params(environ)
+			@build_params = Params.new(**build_params).expand_with!(@factory_params)
+			check_required_params(@build_params)
+			environ.unshift(@build_params)
 			do_build(environ)
 		ensure
+			@build_params = nil
 			environ.shift
-			environ.shift if build_params.any?
 		end
 
 		private
 
+		def params
+			@build_params
+		end
+
+		# NOTE! Don't use environ to get params for building fatory product 
+		# e.g. product.name = environ.name
+		# To get values you mast use #params, and use environ only to calculate param value
+		# e.g. product.name = params.get :name, environ
+		# becouse params it's params for building product, but environ it's environ on wich params values are calculated
+		# i hope it's clear ;) 
 		def do_build(environ)
 			raise 'Abstract method called'
 		end
 
-		def check_required_params(environ)
-			self.class.check_required_params(environ)
+		def check_required_params(params)
+			self.class.check_required_params(params)
 		end
 	end
 end

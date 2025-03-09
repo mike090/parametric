@@ -48,4 +48,12 @@ class TC_Params < TestUp::TestCase
 		e = assert_raises { subject.get :color }
 		assert_match 'Unknown param', e.message
 	end
+
+	def test_expand_with
+		params = Parametric::Params.new color: :red, shape: :rect
+		subject.set :shape, :circle
+		subject.expand_with! params
+		assert_equal :circle, subject.get(:shape)
+		assert_equal :red, subject.get(:color) 
+	end
 end

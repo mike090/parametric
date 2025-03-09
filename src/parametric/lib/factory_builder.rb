@@ -35,10 +35,10 @@ module Parametric
 				builder = Parametric.find_builder method_name
 				if builder
 					factory = builder.build_factory(&blk)
-					@factory.params.set(method_name) { factory.build(self) }
+					@factory.set_param(method_name) { factory.build(self) }
 				else
 					if method_name.match /^[a-zA-Z_]+$/
-						@factory.params.set method_name, args.first, &blk
+						@factory.set_param method_name, args.first, &blk
 					else
 						raise "Unknown builder #{method_name} or invalid factory param name"
 					end

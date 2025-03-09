@@ -13,27 +13,14 @@ class TC_Factory < TestUp::TestCase
 		assert_includes child_factory_class.required_params, :shape
 	end
 
-	def test_build_params
+	def test_factory_params_overloading
 		environ = Parametric::Environ.new
-		environ.unshift(Parametric::Params.new color: :red)
+		environ.unshift(Parametric::Params.new shape_color: :red)
 		factory_class = Class.new Parametric::Factory
 		factory_class.define_method(:do_build) do |environ|
-			"color: #{environ.color}, shape: #{environ.shape}, size: #{environ.size}"
+			"color: #{params.get :color, environ}"
 		end
-		factory = factory_class.new shape: :rect
-		data = factory.build(environ, size: :medium)
-		assert_equal 'color: red, shape: rect, size: medium', data
-	end
-
-	def test_params_overloading
-		environ = Parametric::Environ.new
-		environ.unshift(Parametric::Params.new color: :red)
-		factory_class = Class.new Parametric::Factory
-		factory_class.define_method(:do_build) do |environ|
-			"color: #{environ.color}"
-		end
-		assert_equal 'color: red', factory_class.new.build(environ)
-		assert_equal 'color: green', factory_class.new(color: :green).build(environ)
+		assert_equal 'color: red', factory_class.new(color: proc { shape_color }).build(environ)
 		assert_equal 'color: blue', factory_class.new(color: :green).build(environ, color: :blue)
 	end
 
