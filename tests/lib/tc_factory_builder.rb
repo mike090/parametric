@@ -8,7 +8,7 @@ class TC_FactoryBuilder < TestUp::TestCase
 	def setup
 		self.subject = Class.new Parametric::FactoryBuilder
 		self.factory_class = Class.new Parametric::Factory
-		factory_class.define_method(:do_build) { |environ| params.get :color }
+		factory_class.define_method(:do_build) { param :color }
 		subject.factory_class factory_class
 	end
 
@@ -41,17 +41,17 @@ class TC_FactoryBuilder < TestUp::TestCase
 
 	def test_with_registred_builder
 		pos_factory_class = Class.new Parametric::Factory
-		pos_factory_class.define_method(:do_build) { |environ| "at: #{environ.origin}"  }
+		pos_factory_class.define_method(:do_build) {  "at #{param(:origin)}"  }
 		pos_factory_builder = Class.new Parametric::FactoryBuilder
 		pos_factory_builder.factory_class pos_factory_class
 		Parametric.register_builder 'pos_prop', pos_factory_builder
-		factory_class.define_method(:do_build) { |environ| { some_group: { position: environ.pos_prop } } }
+		factory_class.define_method(:do_build) { { some_group: { position: param(:pos_prop) } } }
 		factory = subject.build_factory do
 			pos_prop { origin [1,0,0] }
 		end
 		assert_equal({
 			some_group: {
-				position: 'at: [1, 0, 0]'
+				position: 'at [1, 0, 0]'
 			}
 		}, factory.build)
 	end

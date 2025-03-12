@@ -17,8 +17,8 @@ class TC_Factory < TestUp::TestCase
 		environ = Parametric::Environ.new
 		environ.unshift(Parametric::Params.new shape_color: :red)
 		factory_class = Class.new Parametric::Factory
-		factory_class.define_method(:do_build) do |environ|
-			"color: #{params.get :color, environ}"
+		factory_class.define_method(:do_build) do
+			"color: #{param :color}"
 		end
 		assert_equal 'color: red', factory_class.new(color: proc { shape_color }).build(environ)
 		assert_equal 'color: blue', factory_class.new(color: :green).build(environ, color: :blue)

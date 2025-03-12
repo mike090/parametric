@@ -9,11 +9,11 @@ module Parametric
 			super **default.merge(init_params)
 		end
 
-		def do_build(environ)
+		def do_build
 			Geom::Transformation.new(
-				params.get(:origin, environ),
-				params.get(:x_direction, environ),
-				params.get(:y_direction, environ)
+				param(:origin),
+				param(:x_direction),
+				param(:y_direction)
 			)
 		end
 	end

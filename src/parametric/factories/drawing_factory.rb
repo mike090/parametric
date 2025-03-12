@@ -8,14 +8,14 @@ module Parametric
 			super **{ container: Sketchup.active_model.entities }.merge(init_params)
 		end
 
-		def do_build(environ)
-			entity = draw(environ)
-			entity.transform!(params.get :position, environ) if entity.respond_to?(:transform!) &&
+		def do_build
+			entity = draw
+			entity.transform!(param :position) if entity.respond_to?(:transform!) &&
 																														params.defined?(:position)
 			entity
 		end
 
-		def draw(environ)
+		def draw
 			raise 'Abstract method called'
 		end
 	end

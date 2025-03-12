@@ -4,13 +4,13 @@ module Parametric
 	class PanelFactory < DrawingFactory
 		required_params :length, :width, :thikness
 
-		def draw(environ)
-			len = environ.length
-			wd = environ.width
-			thk = environ.thikness
+		def draw
+			len = param :length
+			wd = param :width
+			thk = param :thikness
 
-			panel = environ.container.add_group
-			panel.name = environ.name if environ.defined? :name
+			panel = param(:container).add_group
+			panel.name = param :name if params.defined? :name
 			panel.entities.add_face(
 				[0,0,0],
 				[len,0,0],

@@ -10,8 +10,9 @@ class TC_PanelFactory < TestUp::TestCase
 	
 	def test_build_panel
 		factory = Parametric::PanelFactory.new length: 100.mm, width: 50.mm, thikness: 18.mm
-		self.temp_geometry = factory.build
+		self.temp_geometry = factory.build name: 'test_panel'
 		assert_instance_of Sketchup::Group, temp_geometry
+		assert_equal 'test_panel', temp_geometry.name
 		assert temp_geometry.manifold?
 		assert_equal 6, temp_geometry.entities.grep(Sketchup::Face).count
 		edges = temp_geometry.entities.grep(Sketchup::Edge)
