@@ -17,6 +17,12 @@ module Parametric
 				missing = required_params.reject { |param| params.defined? param }
 				raise "Required params #{missing.join ', '} missing" unless missing.empty?
 			end
+
+			def set_param_readers(*params)
+				params.each do |param_name|
+					define_method(param_name) { param(param_name) }
+				end
+			end
 		end
 
 		def initialize(**init_params)
@@ -30,18 +36,26 @@ module Parametric
 		def build(environ = nil, **build_params)
 			@environ = environ || Parametric::Environ.new
 			@build_params = Params.new(**build_params).expand_with!(@factory_params)
-			check_required_params(@build_params)
 			@environ.unshift(@build_params)
+			check_required_params
 			do_build
 		ensure
-			@build_params = nil
-			@environ.shift
+			clear!
 		end
 
 		private
 
+		def clear!
+			@build_params = nil
+			@environ.shift
+		end
+
 		def param(name)
 			@build_params.get name, @environ
+		end
+
+		def params
+			@build_params
 		end
 
 		# NOTE! Don't use @environ to get params for building fatory product 
@@ -54,7 +68,7 @@ module Parametric
 			raise 'Abstract method called'
 		end
 
-		def check_required_params(params)
+		def check_required_params
 			self.class.check_required_params(params)
 		end
 	end

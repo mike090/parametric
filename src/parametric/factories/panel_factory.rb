@@ -5,19 +5,37 @@ module Parametric
 		required_params :length, :width, :thikness
 
 		def draw
-			len = param :length
-			wd = param :width
-			thk = param :thikness
+			container.add_group.tap do |panel| 
+				panel.name = panel_name
+				panel.entities.add_face(base_points).pushpull(-1 * thk)
+			end
+		end
 
-			panel = param(:container).add_group
-			panel.name = param :name if params.defined? :name
-			panel.entities.add_face(
-				[0,0,0],
-				[len,0,0],
-				[len,wd,0],
-				[0,wd,0]
-			).pushpull(-1 * thk)
-			panel
+		private
+
+		def length
+			param :length
+		end
+
+		def width
+			param :width
+		end
+
+		def thikness
+			param :thikness
+		end
+
+		def panel_name
+			params.defined?(:name) ? param(:name) : 'Panel'
+		end
+
+		def base_points
+			[
+				ORIGIN,
+				ORIGIN.offset(X_AXIS, length),
+				ORIGIN.offset(X_AXIS, length).offset(Y_AXIS, width),
+				ORIGIN.offset(Y_AXIS, width)
+			]
 		end
 	end
 
