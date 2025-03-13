@@ -3,27 +3,16 @@ require_relative 'drawing_factory'
 module Parametric
 	class PanelFactory < DrawingFactory
 		required_params :length, :width, :thikness
+		define_param_readers :length, :width, :thikness
 
 		def draw
 			container.add_group.tap do |panel| 
 				panel.name = panel_name
-				panel.entities.add_face(base_points).pushpull(-1 * thk)
+				panel.entities.add_face(base_points).pushpull(-1 * thikness)
 			end
 		end
 
 		private
-
-		def length
-			param :length
-		end
-
-		def width
-			param :width
-		end
-
-		def thikness
-			param :thikness
-		end
 
 		def panel_name
 			params.defined?(:name) ? param(:name) : 'Panel'

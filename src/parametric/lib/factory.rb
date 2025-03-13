@@ -18,9 +18,13 @@ module Parametric
 				raise "Required params #{missing.join ', '} missing" unless missing.empty?
 			end
 
-			def set_param_readers(*params)
+			def define_param_readers(*params)
 				params.each do |param_name|
-					define_method(param_name) { param(param_name) }
+					define_method(param_name) do 
+						param_value = instance_variable_get "@#{param_name}"
+						return param_value if param_value
+						instance_variable_set "@#{param_name}", param(param_name)
+					end
 				end
 			end
 		end

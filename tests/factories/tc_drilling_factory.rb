@@ -18,7 +18,7 @@ class TC_DrillingFactory < TestUp::TestCase
 		) 
 		assert_instance_of Sketchup::Group, _test_geometry
 		assert_equal 'D8x12.5', _test_geometry.name
-		assert _test_geometry.entities.all? Sketchup::Edge
+		assert_instance_of Sketchup::ArcCurve, _test_geometry.entities.grep(Sketchup::Edge).first.curve
 		assert_equal Z_AXIS.reverse, _test_geometry.entities.first.curve.normal
 		assert_equal [1,1,0], _test_geometry.transformation.origin.to_a
 	end

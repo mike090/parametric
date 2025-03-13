@@ -11,30 +11,23 @@ module Parametric
 		self.size = 1.mm
 
 		required_params :point, :normal, :v1
+		define_param_readers :point, :normal
 
 		def draw
 			container.add_group.tap do |pointer|
-				pointer.name = 'pointer'
 				4.times do |i|
-					vector = i == 0 ? v1 : v1.transform Geom::Transformation.rotation(point, normal, i * 90.degrees)
+					vector = v1.transform Geom::Transformation.rotation(point, normal, i * 90.degrees)
 					pointer.entities.add_line point, point.offset(vector)
 				end
+				pointer.name = 'pointer'
 				pointer.layer = Sketchup.active_model.layers.add(Parametric::PointerFactory.layer_name)
 			end
 		end
 
 		private
 
-		def point
-			@point ||= param :point
-		end
-
-		def normal
-			@normal ||= param :normal
-		end
-
 		def v1
-			@v1 ||= Vector3d.new param(:v1).tap { |vector| vector.length = Parametric::PointerFactory.size / 2 }
+			@v1 ||= Vector3d.new(param :v1).tap { |vector| vector.length = Parametric::PointerFactory.size / 2 }
 		end
 	end
 end

@@ -12,6 +12,7 @@ module Parametric
 		self.layer_name = '_machining'
 
 		required_params :diameter, :depth, :normal
+		define_param_readers :diameter, :depth, :normal
 
 		def draw
 			container.add_group.tap do |group|
@@ -24,6 +25,13 @@ module Parametric
 		end
 
 		private
+
+		def clear!
+			@diameter = nil
+			@normal = nil
+			@depth = nil
+			super
+		end
 
 		def fvalue_format(value)
 			value.to_mm.round(1) % 1 > 0 ? value.to_mm.round(1) : value.to_mm.round
@@ -42,18 +50,6 @@ module Parametric
 			group.set_attribute dict, 'type', 'drilling'
 			group.set_attribute dict, 'diameter', diameter.to_mm.round(1)
 			group.set_attribute dict, 'depth', depth.to_mm.round(1)
-		end
-
-		def diameter
-			param :diameter
-		end
-
-		def depth
-			param :depth
-		end
-
-		def normal
-			param :normal
 		end
 
 		def dict

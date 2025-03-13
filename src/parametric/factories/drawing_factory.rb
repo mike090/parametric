@@ -4,6 +4,8 @@ module Parametric
 	class DrawingFactory < Factory
 		required_params :container
 
+		define_param_readers :container
+
 		def initialize(**init_params)
 			super **{ container: Sketchup.active_model.entities }.merge(init_params)
 		end
@@ -23,10 +25,7 @@ module Parametric
 
 		def clear!
 			@container = nil
-		end
-
-		def container
-			@container ||= param :container
+			super
 		end
 	end
 end
