@@ -17,7 +17,7 @@ module Parametric
 		def draw
 			container.add_group.tap do |group|
 				curve = group.entities.add_circle(ORIGIN, normal, diameter/2)
-				group.name = "D#{fvalue_format diameter}x#{fvalue_format depth}"
+				group.name = format_name
 				group.layer = Sketchup.active_model.layers.add(Parametric::DrillingFactory.layer_name)
 				set_attributes group
 				draw_pointer(group.entities, curve)
@@ -26,11 +26,8 @@ module Parametric
 
 		private
 
-		def clear!
-			@diameter = nil
-			@normal = nil
-			@depth = nil
-			super
+		def format_name
+			"D#{fvalue_format diameter}x#{fvalue_format depth}"
 		end
 
 		def fvalue_format(value)

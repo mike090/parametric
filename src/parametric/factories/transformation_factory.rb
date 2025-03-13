@@ -13,6 +13,12 @@ module Parametric
 		def do_build
 			Geom::Transformation.new origin, x_direction, y_direction
 		end
+
+		def clear!(params)
+			@origin = nil
+			@x_direction = nil
+			@y_direction = nil
+		end
 	end
 
 	class TransformationFactoryBuilder < Parametric::FactoryBuilder

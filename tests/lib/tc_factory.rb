@@ -27,8 +27,17 @@ class TC_Factory < TestUp::TestCase
 	def test_required_params_checking
 		factory_class = Class.new Parametric::Factory
 		factory_class.required_params :color
-		factory_class.define_method(:do_build) { |environ| 'rectangle' }
+		factory_class.define_method(:do_build) { 'rectangle' }
 		e = assert_raises { factory_class.new.build }
 		assert_match 'missing', e.message
+	end
+
+	def test_clear_build_params
+		factory_class = Class.new Parametric::Factory
+		factory_class.define_method(:do_build) { color }
+		factory_class.define_param_readers :color
+		factory = factory_class.new
+		assert_equal 'red', factory.build(color: 'red')
+		assert_equal 'blue', factory.build(color: 'blue')
 	end
 end

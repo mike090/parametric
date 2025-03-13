@@ -44,12 +44,13 @@ module Parametric
 			check_required_params
 			do_build
 		ensure
-			clear!
+			clear!(build_params.keys)
 		end
 
 		private
 
-		def clear!
+		def clear!(param_keys)
+			param_keys.each { |param_name| instance_variable_set "@#{param_name}", nil }
 			@build_params = nil
 			@environ.shift
 		end

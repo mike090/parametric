@@ -11,10 +11,10 @@ module Parametric
 		end
 
 		def do_build
-			entity = draw
-			entity.transform!(param :position) if entity.respond_to?(:transform!) &&
+			draw.tap do |entity|
+				entity.transform!(param :position) if entity.respond_to?(:transform!) &&
 																														params.defined?(:position)
-			entity
+			end
 		end
 
 		def draw
@@ -23,7 +23,7 @@ module Parametric
 
 		private
 
-		def clear!
+		def clear!(params)
 			@container = nil
 			super
 		end
