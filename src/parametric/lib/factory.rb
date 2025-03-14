@@ -21,9 +21,7 @@ module Parametric
 			def define_param_readers(*params)
 				params.each do |param_name|
 					define_method(param_name) do 
-						param_value = instance_variable_get "@#{param_name}"
-						return param_value if param_value
-						instance_variable_set "@#{param_name}", param(param_name)
+						param(param_name)
 					end
 				end
 			end
@@ -44,13 +42,12 @@ module Parametric
 			check_required_params
 			do_build
 		ensure
-			clear!(build_params.keys)
+			clear!
 		end
 
 		private
 
-		def clear!(param_keys)
-			param_keys.each { |param_name| instance_variable_set "@#{param_name}", nil }
+		def clear!
 			@build_params = nil
 			@environ.shift
 		end

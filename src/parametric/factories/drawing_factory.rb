@@ -20,12 +20,5 @@ module Parametric
 		def draw
 			raise 'Abstract method called'
 		end
-
-		private
-
-		def clear!(params)
-			@container = nil
-			super
-		end
 	end
 end

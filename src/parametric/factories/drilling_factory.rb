@@ -15,19 +15,19 @@ module Parametric
 		define_param_readers :diameter, :depth, :normal
 
 		def draw
-			container.add_group.tap do |group|
-				curve = group.entities.add_circle(ORIGIN, normal, diameter/2)
-				group.name = format_name
-				group.layer = Sketchup.active_model.layers.add(Parametric::DrillingFactory.layer_name)
-				set_attributes group
-				draw_pointer(group.entities, curve)
+			container.add_group.tap do |drilling|
+				curve = drilling.entities.add_circle(ORIGIN, normal, diameter/2)
+				drilling.name = format_name
+				drilling.layer = Sketchup.active_model.layers.add(Parametric::DrillingFactory.layer_name)
+				set_attributes(drilling)
+				draw_pointer(drilling.entities, curve)
 			end
 		end
 
 		private
 
 		def format_name
-			"D#{fvalue_format diameter}x#{fvalue_format depth}"
+			"Drilling D#{fvalue_format diameter}x#{fvalue_format depth}"
 		end
 
 		def fvalue_format(value)
