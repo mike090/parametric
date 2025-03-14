@@ -4,7 +4,6 @@ module Parametric
 	class AssemblyFactory < DrawingFactory
 
 		def draw
-			container = param :container
 			container.add_group.tap do |assembly|
 				entity_builders.each { |factory| factory.build @environ, container: assembly.entities }
 			end
