@@ -5,8 +5,8 @@ module Parametric
 
 		def draw
 			container = param :container
-			container.add_group.tap do |group|
-				entity_builders.each { |factory| factory.build @environ, container: group.entities }
+			container.add_group.tap do |assembly|
+				entity_builders.each { |factory| factory.build @environ, container: assembly.entities }
 			end
 		end
 
