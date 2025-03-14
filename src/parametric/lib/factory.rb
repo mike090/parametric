@@ -28,16 +28,16 @@ module Parametric
 		end
 
 		def initialize(**init_params)
-			@factory_params = Parametric::Params.new **init_params
+			init_params.each { |param_name, param_value| set_param param_name, param_value }
 		end
 
 		def set_param(name, value = nil, &block)
-			@factory_params.set name, value, &block
+			factory_params.set name, value, &block
 		end
 
 		def build(environ = nil, **build_params)
 			@environ = environ || Parametric::Environ.new
-			@build_params = Params.new(**build_params).expand_with!(@factory_params)
+			@build_params = Params.new(**build_params).expand_with!(factory_params)
 			@environ.unshift(@build_params)
 			check_required_params
 			do_build
@@ -52,6 +52,10 @@ module Parametric
 			@environ.shift
 		end
 
+		def factory_params
+			@factory_params ||= Parametric::Params.new
+		end
+
 		def param(name)
 			@build_params.get name, @environ
 		end
@@ -62,7 +66,7 @@ module Parametric
 
 		# NOTE! Don't use @environ to get params for building fatory product 
 		# e.g. product.name = @environ.name
-		# To get values you mast use #param
+		# To get values you mast use param reader or #param
 		# e.g. product.name = param :name
 		# becouse param it's factory param for building product, but environ it's environ on wich params values are calculated
 		# i hope it's clear ;) 
