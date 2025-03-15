@@ -14,7 +14,7 @@ class TC_PointerFactory < TestUp::TestCase
   	v1 = Y_AXIS
     self._test_entity = Parametric::PointerFactory.new.build(point:, normal:, v1:)
     assert_instance_of Sketchup::Group, _test_entity
-    assert _test_entity.entities.all? Sketchup::Edge
+    assert _test_entity.entities.all? Sketchup::ConstructionLine
     assert_equal 4, _test_entity.entities.count
   end
  end

@@ -8,7 +8,7 @@ module Parametric
 		end
 
 		self.layer_name = '_pointers'
-		self.size = 1.mm
+		self.size = 2.mm
 
 		required_params :point, :normal, :v1
 		define_param_readers :point, :normal
@@ -17,7 +17,7 @@ module Parametric
 			container.add_group.tap do |pointer|
 				4.times do |i|
 					vector = v1.transform Geom::Transformation.rotation(point, normal, i * 90.degrees)
-					pointer.entities.add_line point, point.offset(vector)
+					pointer.entities.add_cline point, point.offset(vector)
 				end
 				pointer.name = 'pointer'
 				pointer.layer = Sketchup.active_model.layers.add(Parametric::PointerFactory.layer_name)
