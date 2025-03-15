@@ -36,4 +36,19 @@ class TC_DrillingFactory < TestUp::TestCase
 		assert_equal 5.0, _test_entity.get_attribute(dict, 'diameter')
 		assert_equal 12.5, _test_entity.get_attribute(dict, 'depth')
 	end
+
+	def test_build_with_drilling_map
+		factory = Parametric::DrillingFactory.new
+		self._test_entity = factory.build map: '5x11,5'
+		assert_equal 'Drilling D5x11.5', _test_entity.name
+		dict = Parametric::DrillingFactory.dictonary_name
+		assert_equal 5.0, _test_entity.get_attribute(dict, 'diameter')
+		assert_equal 11.5, _test_entity.get_attribute(dict, 'depth')
+	end
+
+	def test_init_with_drilling_map
+		factory = Parametric::DrillingFactory.new map: '5x11,5'
+		self._test_entity = factory.build
+		assert_equal 'Drilling D5x11.5', _test_entity.name
+	end
 end

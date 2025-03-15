@@ -7,7 +7,8 @@ module Parametric
 		define_param_readers :container
 
 		def initialize(**init_params)
-			super **{ container: Sketchup.active_model.entities }.merge(init_params)
+			default = { container: Sketchup.active_model.entities }
+			super **default.merge(init_params)
 		end
 
 		def do_build

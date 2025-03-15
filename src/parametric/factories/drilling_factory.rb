@@ -14,6 +14,11 @@ module Parametric
 		required_params :diameter, :depth, :normal
 		define_param_readers :diameter, :depth, :normal
 
+		def initialize(**init_params)
+			default = { normal: Z_AXIS }
+			super **default.merge(init_params)
+		end
+
 		def draw
 			container.add_group.tap do |drilling|
 				curve = drilling.entities.add_circle(ORIGIN, normal, diameter/2)
@@ -51,6 +56,22 @@ module Parametric
 
 		def dict
 			Parametric::DrillingFactory.dictonary_name
+		end
+
+		def parse_params(**params)
+			drilling_map = params[:map]
+			params.merge! try_parse_map(drilling_map) if drilling_map
+			params 
+		end
+
+		def try_parse_map(map)
+			values = (map.scan /^(\d+)[x|*|х]([0-9]*[.,]?[0-9]+)/).first
+			if values && values.length == 2
+				values.map! { |value| value.sub(',', '.').to_f.mm }
+				[:diameter, :depth].zip(values).to_h
+			else
+				{}
+			end
 		end
 	end
 end

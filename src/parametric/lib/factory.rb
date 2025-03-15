@@ -28,7 +28,7 @@ module Parametric
 		end
 
 		def initialize(**init_params)
-			init_params.each { |param_name, param_value| set_param param_name, param_value }
+			@factory_params = Parametric::Params.new **parse_params(**init_params)
 		end
 
 		def set_param(name, value = nil, &block)
@@ -37,7 +37,7 @@ module Parametric
 
 		def build(environ = nil, **build_params)
 			@environ = environ || Parametric::Environ.new
-			@build_params = Params.new(**build_params).expand_with!(factory_params)
+			@build_params = Params.new(**parse_params(**build_params)).expand_with!(factory_params)
 			@environ.unshift(@build_params)
 			check_required_params
 			do_build
@@ -47,13 +47,17 @@ module Parametric
 
 		private
 
+		def parse_params(**params)
+			params
+		end
+
 		def clear!
 			@build_params = nil
 			@environ.shift
 		end
 
 		def factory_params
-			@factory_params ||= Parametric::Params.new
+			@factory_params
 		end
 
 		def param(name)

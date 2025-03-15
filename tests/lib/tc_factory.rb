@@ -40,4 +40,12 @@ class TC_Factory < TestUp::TestCase
 		assert_equal 'red', factory.build(color: 'red')
 		assert_equal 'blue', factory.build(color: 'blue')
 	end
+
+	def test_parse_params
+		factory_class = Class.new Parametric::Factory
+		factory_class.define_method(:do_build) { param :shape }
+		factory_class.define_method(:parse_params) { |**params| params[:shape] = params.delete :form if params[:form]; params }
+		assert_equal 'circle', factory_class.new(form: 'circle').build
+		assert_equal 'circle', factory_class.new.build(form: 'circle')
+	end
 end
