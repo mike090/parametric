@@ -1,7 +1,7 @@
 require_relative 'drawing_factory'
 
 module Parametric
-	class PointerFactory < DrawingFactory
+	class Pointer < DrawingFactory
 
 		class << self
 			attr_accessor :layer_name, :size
@@ -20,14 +20,14 @@ module Parametric
 					pointer.entities.add_cline point, point.offset(vector)
 				end
 				pointer.name = 'pointer'
-				pointer.layer = Sketchup.active_model.layers.add(Parametric::PointerFactory.layer_name)
+				pointer.layer = Sketchup.active_model.layers.add(Parametric::Pointer.layer_name)
 			end
 		end
 
 		private
 
 		def v1
-			@v1 ||= Vector3d.new(param :v1).tap { |vector| vector.length = Parametric::PointerFactory.size / 2 }
+			@v1 ||= Vector3d.new(param :v1).tap { |vector| vector.length = Parametric::Pointer.size / 2 }
 		end
 	end
 end

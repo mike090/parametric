@@ -1,5 +1,5 @@
 require_relative 'drawing_factory'
-require_relative 'pointer_factory'
+require_relative 'pointer'
 
 module Parametric
 	class Drilling < DrawingFactory
@@ -40,7 +40,7 @@ module Parametric
 		end
 
 		def draw_pointer(container, curve)
-			Parametric::PointerFactory.new.build(
+			Parametric::Pointer.new.build(
 				container:,
 				point: ORIGIN, 
 				normal: param(:normal),
