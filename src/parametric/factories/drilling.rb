@@ -2,7 +2,7 @@ require_relative 'drawing_factory'
 require_relative 'pointer_factory'
 
 module Parametric
-	class DrillingFactory < DrawingFactory
+	class Drilling < DrawingFactory
 
 		class << self
 			attr_accessor :dictonary_name, :layer_name
@@ -23,7 +23,7 @@ module Parametric
 			container.add_group.tap do |drilling|
 				curve = drilling.entities.add_circle(ORIGIN, normal, diameter/2)
 				drilling.name = format_name
-				drilling.layer = Sketchup.active_model.layers.add(Parametric::DrillingFactory.layer_name)
+				drilling.layer = Sketchup.active_model.layers.add(Parametric::Drilling.layer_name)
 				set_attributes(drilling)
 				draw_pointer(drilling.entities, curve)
 			end
@@ -55,7 +55,7 @@ module Parametric
 		end
 
 		def dict
-			Parametric::DrillingFactory.dictonary_name
+			Parametric::Drilling.dictonary_name
 		end
 
 		def parse_params(**params)

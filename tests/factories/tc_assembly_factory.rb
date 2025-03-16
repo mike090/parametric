@@ -37,7 +37,7 @@ class TC_AssemblyFactory < TestUp::TestCase
 	end
 
 	def drilling_factory
-		@drilling_factory ||= Parametric::DrillingFactory.new(
+		@drilling_factory ||= Parametric::Drilling.new(
 			diameter: 8.mm,
 			depth: 13.mm,
 			normal: Z_AXIS.reverse,
