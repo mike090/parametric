@@ -59,18 +59,20 @@ module Parametric
 		end
 
 		def parse_params(**params)
-			drilling_map = params[:map]
-			params.merge! try_parse_map(drilling_map) if drilling_map
+			scheme = params[:scheme]
+			params.merge! parse_scheme(scheme) if scheme
 			params 
 		end
 
-		def try_parse_map(map)
-			values = (map.scan /^(\d+)[x|*|х]([0-9]*[.,]?[0-9]+)/).first
+		def parse_scheme(scheme)
+			raise "invalid drilling scheme. It mast be string like 'D5x11'" unless String === scheme
+
+			values = (scheme.scan /^[Dd]?(\d+[.,]?\d?)[x|*|х](\d+[.,]?\d?)/).first
 			if values && values.length == 2
 				values.map! { |value| value.sub(',', '.').to_f.mm }
 				[:diameter, :depth].zip(values).to_h
 			else
-				{}
+				raise "invalid drilling scheme #{scheme}"
 			end
 		end
 	end

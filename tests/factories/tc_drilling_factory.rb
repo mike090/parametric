@@ -37,18 +37,26 @@ class TC_DrillingFactory < TestUp::TestCase
 		assert_equal 12.5, _test_entity.get_attribute(dict, 'depth')
 	end
 
-	def test_build_with_drilling_map
+	def test_build_with_drilling_scheme
 		factory = Parametric::DrillingFactory.new
-		self._test_entity = factory.build map: '5x11,5'
+		self._test_entity = factory.build scheme: '5x11,5'
 		assert_equal 'Drilling D5x11.5', _test_entity.name
 		dict = Parametric::DrillingFactory.dictonary_name
 		assert_equal 5.0, _test_entity.get_attribute(dict, 'diameter')
 		assert_equal 11.5, _test_entity.get_attribute(dict, 'depth')
 	end
 
-	def test_init_with_drilling_map
-		factory = Parametric::DrillingFactory.new map: '5x11,5'
+	def test_init_with_drilling_scheme
+		factory = Parametric::DrillingFactory.new scheme: '5x11,5'
 		self._test_entity = factory.build
 		assert_equal 'Drilling D5x11.5', _test_entity.name
+	end
+
+	def test_drilling_scheme
+		factory = Parametric::DrillingFactory.new scheme: '5x11'
+		factory.define_singleton_method(:do_build) { { d: diameter.to_mm, depth: depth.to_mm } }
+		assert_equal({ d: 5, depth: 11 }, factory.build)
+		assert_equal({ d: 5.2, depth: 11.5 }, factory.build(scheme: 'D5,2*11.5'))
+		assert_equal({ d: 35, depth: 12.5 }, factory.build(scheme: 'd35*12.5'))
 	end
 end
