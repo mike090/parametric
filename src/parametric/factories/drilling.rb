@@ -61,7 +61,7 @@ module Parametric
 		def parse_params(**params)
 			scheme = params[:scheme]
 			params.merge! parse_scheme(scheme) if scheme
-			params 
+			super 
 		end
 
 		def parse_scheme(scheme)
