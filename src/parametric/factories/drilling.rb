@@ -8,7 +8,7 @@ module Parametric
 			attr_accessor :dictonary_name, :layer_name
 		end
 
-		self.dictonary_name = 'Machining'
+		self.dictonary_name = 'Parametric'
 		self.layer_name = '_machining'
 
 		required_params :diameter, :depth, :normal

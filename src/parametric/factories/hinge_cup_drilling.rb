@@ -28,6 +28,7 @@ module Parametric
 					drill.build **fixing_drilling_params, position: pos
 				end
 				cup_drilling.name = 'Hinge cup drilling'
+				cup_drilling.set_attribute 'Parametric', 'type', 'drilling_group'
 			end			
 		end
 
