@@ -27,7 +27,7 @@ module Parametric
 		private
 
 		def v1
-			@v1 ||= Vector3d.new(param :v1).tap { |vector| vector.length = Parametric::Pointer.size / 2 }
+			@v1 ||= Geom::Vector3d.new(param :v1).tap { |vector| vector.length = Parametric::Pointer.size / 2 }
 		end
 	end
 end

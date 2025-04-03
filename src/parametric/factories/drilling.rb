@@ -44,7 +44,7 @@ module Parametric
 				container:,
 				point: ORIGIN, 
 				normal: param(:normal),
-				v1: Vector3d.new(curve.first.curve.xaxis)
+				v1: Geom::Vector3d.new(curve.first.curve.xaxis)
 			)
 		end
 
