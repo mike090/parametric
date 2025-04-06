@@ -6,6 +6,18 @@ module Parametric
 
 		class << self
 			attr_accessor :dictonary_name, :layer_name
+
+			def parse_scheme(scheme)
+				raise "invalid drilling scheme. It mast be string like 'D5x11'" unless String === scheme
+
+				values = (scheme.scan /^[Dd]?(\d+[.,]?\d?)[x|*|х](\d+[.,]?\d?)/).first
+				if values && values.length == 2
+					values.map! { |value| value.sub(',', '.').to_f.mm }
+					[:diameter, :depth].zip(values).to_h
+				else
+					raise "invalid drilling scheme #{scheme}"
+				end
+			end
 		end
 
 		self.dictonary_name = 'Parametric'
@@ -60,20 +72,8 @@ module Parametric
 
 		def parse_params(**params)
 			scheme = params[:scheme]
-			params.merge! parse_scheme(scheme) if scheme
+			params.merge! Drilling.parse_scheme(scheme) if scheme
 			super 
-		end
-
-		def parse_scheme(scheme)
-			raise "invalid drilling scheme. It mast be string like 'D5x11'" unless String === scheme
-
-			values = (scheme.scan /^[Dd]?(\d+[.,]?\d?)[x|*|х](\d+[.,]?\d?)/).first
-			if values && values.length == 2
-				values.map! { |value| value.sub(',', '.').to_f.mm }
-				[:diameter, :depth].zip(values).to_h
-			else
-				raise "invalid drilling scheme #{scheme}"
-			end
 		end
 	end
 end
