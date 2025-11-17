@@ -88,7 +88,7 @@ module BoxDefiner
     view.draw GL_LINES, base.zip(opposite).flatten
   end
 
-  def active_stage
+  def define_stage
     # puts "#{self.class}\##{__method__}" if $debug
     return first_stage unless first_stage.base_defined?
 

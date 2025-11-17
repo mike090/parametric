@@ -11,7 +11,7 @@ module Parametric
       # Activates the stage
       # @return [Object, nil] 
       def stage
-        return unless a_stage = select_stage
+        return unless a_stage = define_stage
 
         unless stages.last == a_stage
           stages.push a_stage
