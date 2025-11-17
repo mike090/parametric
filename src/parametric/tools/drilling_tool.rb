@@ -106,9 +106,9 @@ module Parametric
 
 		def onLButtonDown(flags, x, y, view)
 			@mouse_ip.pick(view, x, y)
-			puts @mouse_ip.instance_path.to_a
+			# puts @mouse_ip.instance_path.to_a
 			# return Sketchup.active_model.tools.pop_tool unless @mouse_ip.instance_path.to_a.include?(@panel.geometry)
-			puts "selected: #{selected_anchors.count}"
+			puts "selected: #{selected_anchors.map { |a| a.position }}"
 		end
 
 		def draw(view)
@@ -160,6 +160,7 @@ module Parametric
 			end
 			lines << [anchor.position, anchor.position.offset(anchor.y_axis, 35.mm)]
 			view.drawing_color = selected ? 'blue' : 'black'
+			view.line_width = selected ? 3 : 1
 			lines.each { |line| view.draw_line to_model(line) }
 		end
 
@@ -215,8 +216,8 @@ module Parametric
 			return unless @panel_face
 			
 			@panel_face.edges.sort_by(&:length).last(2).each do |edge|
-				anchors << Parametric::EdgeAnchor.new(@panel, edge, edge.start, offset)
-				anchors << Parametric::EdgeAnchor.new(@panel, edge, edge.end, offset)
+				anchors << Parametric::EdgeAnchor.new(@panel, edge, edge.start, @offset)
+				anchors << Parametric::EdgeAnchor.new(@panel, edge, edge.end, @offset)
 				anchors << Parametric::EdgeAnchor.new(@panel, edge, edge.start, edge.length / 2)
 			end
 		end

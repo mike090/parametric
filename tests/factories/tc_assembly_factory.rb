@@ -1,7 +1,7 @@
 require 'testup/testcase'
 require_relative '../../src/parametric/factories/assembly_factory'
 require_relative '../../src/parametric/factories/panel_factory'
-require_relative '../../src/parametric/factories/drilling_factory'
+require_relative '../../src/parametric/factories/drilling'
 
 class TC_AssemblyFactory < TestUp::TestCase
 	attr_accessor :_test_entity

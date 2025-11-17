@@ -1,5 +1,4 @@
 require_relative 'drawing_factory'
-require_relative 'hinge_cup_mapper'
 require_relative 'drilling'
 
 module Parametric

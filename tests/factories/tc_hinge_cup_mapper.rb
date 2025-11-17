@@ -1,5 +1,5 @@
 require 'testup/testcase'
-require_relative '../../src/parametric/factories/hinge_cup_mapper'
+require_relative '../../src/parametric/factories/hinge_cup_drilling'
 require_relative '../../src/parametric/models/maps/hinge_cup'
 
 class TC_HingeCupMapper < TestUp::TestCase
