@@ -25,6 +25,7 @@ module Parametric::Tools::BoxDefiner
 
   def activate
     @box_model = Model.new
+    next_stage(first_stage)
   end
 
   def draw(view)
@@ -52,6 +53,8 @@ module Parametric::Tools::BoxDefiner
 
   private
 
+
+
   def box
     return unless @box_model.frozen?
 
@@ -64,29 +67,25 @@ module Parametric::Tools::BoxDefiner
     view.draw GL_LINES, box.edges.flatten
   end
 
-  def define_stage
-    if @box_model.frozen?
-
-    elsif @box_model.base
-      push_pull_stage
-    else
-      first_stage
+  def first_stage
+    @first_stage ||= SetBaseStage.new(@box_model) do
+       @box_model.valid? ? @box_model.freeze : next_stage(push_pull_stage)
     end
   end
 
-  def first_stage
-    @first_stage ||= SetBaseStage.new(@box_model)
-  end
-
   def push_pull_stage
-    @push_pull_stage ||= PushPullStage.new(@box_model)
+    @push_pull_stage ||= PushPullStage.new(@box_model) do
+      @box_model.freeze
+      next_stage nil
+    end
   end
 
 
   class SetBaseStage
 
-    def initialize(model)
+    def initialize(model, &when_done)
       @model = model
+      @when_done = when_done
     end
 
     def activate
@@ -121,13 +120,12 @@ module Parametric::Tools::BoxDefiner
 
     def onLButtonDown(flags, x, y, view)
       if @model.first_corner 
-        case @model.vectors.count
-        when 2
-          @model.base = base
-        when 3
-          @model.freeze
+        if @model.vectors.count == 1 
+          view.tooltip = 'Corners on the same line'
+        else
+          done
+          view.invalidate
         end
-        view.invalidate
       else
         @model.first_corner = @mouse.position
 		    update_ui
@@ -151,11 +149,17 @@ module Parametric::Tools::BoxDefiner
         len_values.count == diagonal_decomp.count
       
       diagonal_decomp.zip(len_values).map! do |vector, len|
-        vector.length = len; vector
+        vector.length = len
+        vector
       end
       @model.opposite_corner = @model.first_corner + diagonal_decomp.reduce(&:+)
-      @model.freeze if @model.valid?
-      view.invalidate
+
+      if @model.vectors.count == 1 
+        view.tooltip = 'Corners on the same line'
+      else
+        done
+        view.invalidate
+      end
     rescue ArgumentError
       view.tooltip = 'Invalid length value'
     end
@@ -179,17 +183,26 @@ module Parametric::Tools::BoxDefiner
 
     private
 
+    def done
+      case @model.vectors.count
+      when 2
+        @model.base = base
+      when 3
+        @model.freeze unless @when_done
+      end
+      @when_done.call(self, @model) if @when_done
+    end
+
     def calc_opposite_corner
       @mouse.position unless @mouse.position == @model.first_corner
     end
 
     def base
-      return unless @model.first_corner && @model.opposite_corner
+      v1, v2 = @model.vectors
+      return unless v2
 
       p0 = @model.first_corner
       p2 = @model.opposite_corner
-      v1, v2 = @model.vectors
-      v2 ||= ::Geom::Vector3d.new
 
       Parametric::Geom::Polygon.new p0, p0 + v1, p2, p0 + v2
     end
@@ -212,8 +225,9 @@ module Parametric::Tools::BoxDefiner
 
   class PushPullStage
 
-    def initialize(model)
+    def initialize(model, &when_done)
       @model = model
+      @when_done = when_done
     end
 
     def activate
@@ -242,7 +256,7 @@ module Parametric::Tools::BoxDefiner
 
     def onLButtonDown(flags, x, y, view)
       if @model.valid?
-        @model.freeze
+        done
         view.invalidate
       end
     end
@@ -280,11 +294,13 @@ module Parametric::Tools::BoxDefiner
 
     def onUserText(text, view)
       len = text.to_l
+      return view.tooltip = 'Zero length' if len == 0
+
       vector = base[2].vector_to(@model.opposite_corner)
       if vector.valid?
         vector.length = len
         @model.opposite_corner = base[2] + vector
-        @model.freeze
+        done
         view.invalidate
       else
         view.tooltip = 'The direction is uncertain'
@@ -294,6 +310,10 @@ module Parametric::Tools::BoxDefiner
     end
 
     private
+
+    def done
+      @when_done ? @when_done.call(self, @model) : @model.freeze
+    end
 
     def base
       @model.base

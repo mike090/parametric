@@ -7,32 +7,23 @@ module Parametric
 
       private
 
-      # Adds an active stage to the stages stack
-      # Activates the stage
-      # @return [Object, nil] 
-      def stage
-        return unless a_stage = define_stage
+      def active_stage
+        stages.last
+      end
 
-        unless stages.last == a_stage
-          stages.push a_stage
-          try a_stage, :activate
-        end
-        a_stage
+      def next_stage(stage)
+        try stage, :activate
+        stages << stage
       end
 
       # Tries to undo the stages changes by sequentially calling
       # the #undo method for each item from the stages stack
       # NOTE: the STAGE #undo method should return the logical truth if the changes have been undone
-      # @return [Object, ] the stage where the undo method returned the logical truth
+      # @return [Object, nil] the stage where the undo method returned the logical truth
       def undo
         return if stages.empty?
 
-        last_stage_undo || previous_stage_undo
-        stages.last
-      end
-
-      def last_stage_undo
-        try stages.last, :undo
+        try(active_stage, :undo) || previous_stage_undo
       end
 
       def previous_stage_undo
@@ -59,7 +50,6 @@ module Parametric
           shim = Module.new
           methods.each do |method_name|
             shim.define_method(method_name) do |*args|
-              active_stage = stage
               active_stage.public_send(method_name, *args) if active_stage&.respond_to? method_name
             end
           end
