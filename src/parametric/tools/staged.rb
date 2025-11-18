@@ -15,9 +15,8 @@ module Parametric
 
         unless stages.last == a_stage
           stages.push a_stage
-          a_stage.activate if a_stage.respond_to? :activate
+          try a_stage, :activate
         end
-        
         a_stage
       end
 
@@ -26,27 +25,33 @@ module Parametric
       # NOTE: the STAGE #undo method should return the logical truth if the changes have been undone
       # @return [Object, ] the stage where the undo method returned the logical truth
       def undo
+        return if stages.empty?
+
         last_stage_undo || previous_stage_undo
         stages.last
       end
 
       def last_stage_undo
-        stages.last.undo if stages.last&.respond_to? :undo
+        try stages.last, :undo
       end
 
       def previous_stage_undo
-        pop_stage && undo
+        pop_stage
+        undo
+      end
+
+      def pop_stage
+        stage = stages.pop
+        try stage, :deactivate
+        try stage, :reset
       end
 
       def stages
         @stages ||= []
       end
 
-      def pop_stage
-        return unless stages.last
-
-        stages.last.reset if stages.last.respond_to? :reset
-        stages.pop
+      def try(receiver, method, *params)
+        receiver.public_send(method, *params) if receiver.respond_to? method
       end
 
       module ClassMethods
@@ -55,7 +60,7 @@ module Parametric
           methods.each do |method_name|
             shim.define_method(method_name) do |*args|
               active_stage = stage
-              active_stage.send(method_name, *args) if active_stage&.respond_to? method_name
+              active_stage.public_send(method_name, *args) if active_stage&.respond_to? method_name
             end
           end
           self.include shim

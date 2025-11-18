@@ -1,8 +1,13 @@
-require_relative '..\staged'
-require_relative '..\..\lib\geom'
-require_relative '..\..\lib\geom\polygon'
+require_relative 'staged'
+require_relative '..\lib\geom'
+require_relative '..\lib\geom\polygon'
+require_relative '..\lib\geom\box'
 
-module BoxDefiner
+# Include this module if your tool needs to define the box
+module Parametric::Tools::BoxDefiner
+  
+  # after that, your tool will have public methods that 
+  # it will redirect to the object returned by the 'define_stage' method
   include Parametric::Tools::Staged
 
   staged_methods :draw, :onMouseMove, :onLButtonDown, :enableVCB?,
@@ -19,21 +24,13 @@ module BoxDefiner
   end
 
   def activate
-    @mouse = Sketchup::InputPoint.new
     @box_model = Model.new
-    update_prompt
   end
 
   def draw(view)
-  #   super
-    # puts "#{self.class}\##{__method__}"
-    return super unless push_pull_stage.box_defined?
+    return super unless @box_model.frozen?
 
     draw_box(view)
-  #   return unless @mouse.valid?
-
-  #   view.tooltip = @mouse.tooltip
-  #   @mouse.draw(view) if @mouse.display?
   end
 
   def getExtents
@@ -43,56 +40,38 @@ module BoxDefiner
     end
   end
 
-  def onMouseMove(flags, x, y, view)
-    super
-    @mouse.pick(view, x, y)
-    update_vcb_value
-  end
-
-  def onKeyDown(key, repeat, flags, view)
-    case key
-    when  27 # KEY_ESCAPE
-      if stage = undo
-        # stage.set_mouse @mouse
-			  resume view
-      end 
-    else
-      super
-    end
-  end
-
-  def onUserText(text, view)
-    len_values = text.split(';').map(&:to_l)
-    box_diagonal = @box_model.vectors
-    super unless len_values.count == box_diagonal.count
-    box_diagonal.zip(len_values).map! { |vector, len| vector.length = len; vector }
-    @box_model.opposite_corner = @box_model.first_corner + box_diagonal.reduce(&:+)
-    view.invalidate
-	rescue ArgumentError
-		view.tooltip = 'Invalid length value'
+  def onCancel(reason, view)
+    return if @box_model.frozen? || reason != 0
+    
+    resume(view) if undo
   end
 
   def enableVCB?
-    (@box_model.vectors.count == 3) || super
+    !@box_model.frozen? && @box_model.first_corner
   end
 
-  # private
+  private
+
+  def box
+    return unless @box_model.frozen?
+
+    vx, vy, vz = @box_model.vectors
+    Parametric::Geom::Box.new vx, vy, vz,
+      Geom::Transformation.new(@box_model.first_corner)
+  end
 
   def draw_box(view)
-    p0 = @box_model.first_corner
-    v1, v2, v3 = @box_model.vectors
-    base = [p0, p0 + v1, p0 + v1 + v2, p0 +v2]
-    view.draw GL_LINE_LOOP, base
-    opposite = base.map { |point| point + v3 }
-    view.draw GL_LINE_LOOP, opposite
-    view.draw GL_LINES, base.zip(opposite).flatten
+    view.draw GL_LINES, box.edges.flatten
   end
 
   def define_stage
-    # puts "#{self.class}\##{__method__}" if $debug
-    return first_stage unless first_stage.base_defined?
+    if @box_model.frozen?
 
-    return push_pull_stage unless push_pull_stage.box_defined?
+    elsif @box_model.base
+      push_pull_stage
+    else
+      first_stage
+    end
   end
 
   def first_stage
@@ -103,10 +82,6 @@ module BoxDefiner
     @push_pull_stage ||= PushPullStage.new(@box_model)
   end
 
-  def update_vcb_value
-    Sketchup.vcb_value = @box_model.vectors.map(&:length).map(&:to_s).join(';')
-  end
-
 
   class SetBaseStage
 
@@ -115,48 +90,74 @@ module BoxDefiner
     end
 
     def activate
-      @done_flag = false
       @mouse = Sketchup::InputPoint.new
-      Sketchup.status_text = 'Click to pick first box corner'
-    end
-
-    def base_defined?
-      @done_flag
+		  update_ui
     end
 
     def draw(view)
       @mouse.draw(view) if @mouse.display?
-      loop = base
-      view.draw(GL_LINE_LOOP, loop) if loop
+      
+      case @model.vectors.count
+      when 1
+        view.draw GL_LINES, @model.first_corner, @model.opposite_corner
+      when 2
+        v1, v2 = @model.vectors
+        p0 = @model.first_corner
+        view.draw GL_LINE_LOOP, p0, p0 + v1, p0 + v1 + v2, p0 + v2
+      when 3
+        v1, v2, v3 = @model.vectors
+        p0 = @model.first_corner
+        loop = p0, p0 + v1, p0 + v1 + v2, p0 + v2
+        view.draw GL_LINE_LOOP, loop
+        opposite = loop.map { |point| point + v3 }
+        view.draw GL_LINE_LOOP, opposite
+        view.draw GL_LINES, loop.zip(opposite).flatten
+      end
     end
 
     def enableVCB?
-      true
+      @model.first_corner
+    end
+
+    def onLButtonDown(flags, x, y, view)
+      if @model.first_corner 
+        case @model.vectors.count
+        when 2
+          @model.base = base
+        when 3
+          @model.freeze
+        end
+        view.invalidate
+      else
+        @model.first_corner = @mouse.position
+		    update_ui
+      end 
     end
 
     def onMouseMove(flags, x, y, view)
       @mouse.pick(view, x, y)
-      @model.opposite_corner = calc_opposite_corner if @model.first_corner
+      if @model.first_corner
+        @model.opposite_corner = calc_opposite_corner
+        update_vcb_value
+      end
       view.tooltip = @mouse.tooltip
-		  update_ui
       view.invalidate
     end
 
-    def onLButtonDown(flags, x, y, view)
-      if @model.first_corner
-        @done_flag = !!@model.opposite_corner
-      else
-        @model.first_corner = @mouse.position
-        Sketchup.status_text = 'Click to set opposite corner or enter dimensions'
-      end 
-    end
-
     def onUserText(text, view)
+      len_values = text.split(';').map(&:to_l)
+      diagonal_decomp = @model.vectors
+      return view.tooltip = 'Incorrect dimensions count' unless
+        len_values.count == diagonal_decomp.count
       
-    end
-
-    def reset
-      @done_flag = false
+      diagonal_decomp.zip(len_values).map! do |vector, len|
+        vector.length = len; vector
+      end
+      @model.opposite_corner = @model.first_corner + diagonal_decomp.reduce(&:+)
+      @model.freeze if @model.valid?
+      view.invalidate
+    rescue ArgumentError
+      view.tooltip = 'Invalid length value'
     end
 
     def resume(view)
@@ -165,20 +166,18 @@ module BoxDefiner
     end
 
     def undo
-      puts "#{self.class}\##{__method__}" if $debug
       return unless @model.first_corner
       
-      if @done_flag
-        @done_flag = false
+      if @model.base
+        @model.opposite_corner = @model.base[2]
+        @model.base = nil
       else
-        return unless @model.first_corner
-
         @model.first_corner = @model.opposite_corner = nil
       end
       true
     end
 
-    # private
+    private
 
     def calc_opposite_corner
       @mouse.position unless @mouse.position == @model.first_corner
@@ -203,8 +202,11 @@ module BoxDefiner
           @model.first_corner ? 'The points do not lie on one of the planes parallel to the projection' :
             'Click to set first corner'
       end
-      
 		  Sketchup.vcb_label = 'Dimensions:'
+    end
+
+    def update_vcb_value
+      Sketchup.vcb_value = @model.vectors.map(&:length).map(&:to_s).join(';')
     end
   end
 
@@ -215,16 +217,10 @@ module BoxDefiner
     end
 
     def activate
-      puts "#{self.class}\##{__method__}" if $debug
-      return @done_flag = true if @model.valid? # in the case when the box dimensions were set at the stage of determining the base
+      return if @model.valid? # in the case when the box dimensions were set at the stage of determining the base
 
-      @done_flag = false
+      update_ui
       @mouse = Sketchup::InputPoint.new
-      base
-    end
-
-    def box_defined?
-      @done_flag
     end
 
     def draw(view)
@@ -245,10 +241,8 @@ module BoxDefiner
     end
 
     def onLButtonDown(flags, x, y, view)
-      return if @done_flag
-
-      if @model.vectors.count == 3
-        @done_flag = true 
+      if @model.valid?
+        @model.freeze
         view.invalidate
       end
     end
@@ -265,7 +259,8 @@ module BoxDefiner
         intersection = test_plane.intersect_line(pickray)
         intersection.project_to_plane(base.plane).vector_to(intersection)
       end
-      @model.opposite_corner = @base[2] + push_pull_vector
+      Sketchup.vcb_value = push_pull_vector.length.to_s
+      @model.opposite_corner = base[2] + push_pull_vector
       view.tooltip = @mouse.tooltip
       view.invalidate
     end
@@ -275,8 +270,6 @@ module BoxDefiner
     end
 
     def reset
-      @done_flag = false
-      @base = nil
       @test_plane = nil
     end
 
@@ -285,28 +278,25 @@ module BoxDefiner
       view.invalidate
     end
 
-    def undo
-      puts "#{self.class}\##{__method__}" if $debug
-      return unless @base # in the case when the box dimensions were set at the stage of determining the base
-      
-      if @done_flag
-        @done_flag = false
-        true
+    def onUserText(text, view)
+      len = text.to_l
+      vector = base[2].vector_to(@model.opposite_corner)
+      if vector.valid?
+        vector.length = len
+        @model.opposite_corner = base[2] + vector
+        @model.freeze
+        view.invalidate
       else
-        @model.opposite_corner = @base[2]
-        @base = nil
-        @test_plane = nil
+        view.tooltip = 'The direction is uncertain'
       end
+    rescue ArgumentError
+      view.tooltip = 'Invalid length value'
     end
 
     private
 
     def base
-      @base ||= begin
-        p0 = @model.first_corner
-        v1,v2 = @model.vectors
-        Parametric::Geom::Polygon.new(p0, p0 + v1, p0 + v1 + v2, p0 + v2)
-      end
+      @model.base
     end
 
     def test_plane
@@ -324,14 +314,15 @@ module BoxDefiner
   end
 
   class Model
-    attr_accessor :first_corner, :opposite_corner
+    attr_accessor :first_corner, :opposite_corner, :base
 
     def vectors
       calc_vectors || []
     end
 
     def valid?
-      vectors.count == 3
+      xyz = vectors
+      xyz.count == 3 && xyz.all?(&:valid?)
     end
     
     private
