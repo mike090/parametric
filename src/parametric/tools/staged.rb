@@ -20,15 +20,15 @@ module Parametric
       # the #undo method for each item from the stages stack
       # NOTE: the STAGE #undo method should return the logical truth if the changes have been undone
       # @return [Object, nil] the stage where the undo method returned the logical truth
-      def undo
+      def undo(*params)
         return if stages.empty?
 
-        try(active_stage, :undo) || previous_stage_undo
+        try(active_stage, :undo, *params) || previous_stage_undo(*params)
       end
 
-      def previous_stage_undo
+      def previous_stage_undo(*params)
         pop_stage
-        undo
+        undo(*params)
       end
 
       def pop_stage
