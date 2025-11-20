@@ -14,6 +14,7 @@ module Parametric
       def next_stage(stage)
         try stage, :activate
         stages << stage
+        stage
       end
 
       # Tries to undo the stages changes by sequentially calling
@@ -27,11 +28,12 @@ module Parametric
       end
 
       def previous_stage_undo(*params)
-        pop_stage
-        undo(*params)
+        pop_stage && undo(*params)
       end
 
       def pop_stage
+        return if stages.count == 0
+        
         stage = stages.pop
         try stage, :deactivate
         try stage, :reset

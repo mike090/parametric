@@ -16,20 +16,33 @@ module Parametric::Tools::BoxDefiner
   attr_reader :box_model
 
   def self.use
-    tool = Object.new
-    tool.extend self
+    tool = as_stage
     Sketchup.active_model.select_tool tool
     Sketchup.focus
     tool   
   end
 
+  def self.as_stage(&when_done)
+    stage = Object.new
+    stage.extend self
+    stage.define_singleton_method :fix_box do
+      super()
+      when_done.call(@box_params) if when_done
+    end
+    stage.singleton_class.class_eval { private :fix_box }
+    stage
+  end
+
   def activate
-    @box_model = Model.new
-    next_stage(first_stage)
+    reset
+  end
+
+  def box_defined?
+    @box_params
   end
 
   def draw(view)
-    return super unless @box_model.frozen?
+    return super unless box_defined?
 
     draw_box(view)
   end
@@ -42,44 +55,60 @@ module Parametric::Tools::BoxDefiner
   end
 
   def onCancel(reason, view)
-    return if @box_model.frozen? || reason != 0
+    return unless reason == 0
     
     resume(view) if undo
   end
 
   def enableVCB?
-    !@box_model.frozen? && @box_model.first_corner
+    return if box_defined?
+    
+    @box_model.first_corner
   end
 
   private
 
-
-
   def box
-    return unless @box_model.frozen?
+    return unless box_defined?
 
-    vx, vy, vz = @box_model.vectors
-    Parametric::Geom::Box.new vx, vy, vz,
-      Geom::Transformation.new(@box_model.first_corner)
+    params = @box_params[1..] << Geom::Transformation.new(@box_params.first)
+    Parametric::Geom::Box.new *params
   end
 
   def draw_box(view)
     view.draw GL_LINES, box.edges.flatten
   end
 
+  def fix_box
+    @box_params = [@box_model.first_corner] + @box_model.vectors
+    next_stage nil # prevent model changes through user input events
+    Sketchup.status_text = ''
+    Sketchup.vcb_label = ''
+  end
+
+  def undo
+    @box_params = nil
+    super
+  end
+
   def first_stage
     @first_stage ||= SetBaseStage.new(@box_model) do
-       @box_model.valid? ? @box_model.freeze : next_stage(push_pull_stage)
+       @box_model.valid? ? fix_box : next_stage(push_pull_stage)
     end
   end
 
   def push_pull_stage
     @push_pull_stage ||= PushPullStage.new(@box_model) do
-      @box_model.freeze
-      next_stage nil
+      fix_box
     end
   end
 
+  def reset
+    @box_model = Model.new
+    @first_stage = @push_pull_stage = nil
+    stages.clear
+    next_stage(first_stage)
+  end
 
   class SetBaseStage
 
@@ -112,10 +141,6 @@ module Parametric::Tools::BoxDefiner
         view.draw GL_LINE_LOOP, opposite
         view.draw GL_LINES, loop.zip(opposite).flatten
       end
-    end
-
-    def enableVCB?
-      @model.first_corner
     end
 
     def onLButtonDown(flags, x, y, view)
@@ -184,12 +209,7 @@ module Parametric::Tools::BoxDefiner
     private
 
     def done
-      case @model.vectors.count
-      when 2
-        @model.base = base
-      when 3
-        @model.freeze unless @when_done
-      end
+      @model.base = base if @model.vectors.count == 2
       @when_done.call(self, @model) if @when_done
     end
 
@@ -279,10 +299,6 @@ module Parametric::Tools::BoxDefiner
       view.invalidate
     end
 
-    def enableVCB?
-      true
-    end
-
     def reset
       @test_plane = nil
     end
@@ -309,10 +325,16 @@ module Parametric::Tools::BoxDefiner
       view.tooltip = 'Invalid length value'
     end
 
+    def undo
+      return unless @model.base && @model.valid?
+
+      @model.opposite_corner = @model.base[2]
+    end
+
     private
 
     def done
-      @when_done ? @when_done.call(self, @model) : @model.freeze
+      @when_done.call(self, @model) if @when_done
     end
 
     def base
