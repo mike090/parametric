@@ -25,6 +25,8 @@ class TC_BoxTool < TestUp::TestCase
     rescue MockExpectationError
       true
     end
+
+    alias unused? skipped?
   end
 
   def mock_block(retval,*expected_params)
@@ -38,12 +40,13 @@ class TC_BoxTool < TestUp::TestCase
     retval = 4
     x2_tool = MockTool.new retval, *expected_params # tool receive 2 and passes 4 to the block 
     block = mock_block(true, 4)
+    assert x2_tool.unused?
     assert x2_tool.as_stage(2) { |params| block.call(*params) }
     assert x2_tool.used?
     assert block.verify
   end
 
-  def test_as_stage
+  def test_push_pull_skipped
     vectors = [10,20,30].each_with_index.map { |len, index| Geom::Vector3d.new [0,0].insert(index, len) }
     box_params = [ORIGIN, vectors]
     profile = [[0,0], [10,0], [10,20], [0,20]].map { |pos| Geom::Point3d.new pos }

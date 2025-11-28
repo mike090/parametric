@@ -1,18 +1,9 @@
 module Parametric::Tools::PushPullTool
-  extend Forwardable
 
   attr_writer :profile
 
   def self.as_sage(profile, &when_done)
-    stage = Object.new
-    stage.extend self
-    stage.profile = profile
-    stage.define_singleton_method :done do |view|
-      when_done.call(@model.vector) if when_done
-      super(view)
-    end
-    stage.singleton_class.class_eval { private :done }
-    stage
+    Stage.new(profile, &when_done)
   end
 
   def activate
@@ -94,9 +85,7 @@ module Parametric::Tools::PushPullTool
   private
 
   def done(view)
-    @model = Model.new(@profile)
-    view.invalidate
-    update_ui
+    raise 'Abstract method'
   end
 
   def update_ui
@@ -122,6 +111,19 @@ module Parametric::Tools::PushPullTool
         p1 = @profile.center
         Parametric::Geom::Plane.new [p0, p1, p1.offset(@profile.plane.normal)]
       end
+    end
+  end
+
+  class Stage
+    include Parametric::Tools::PushPullTool
+
+    def initialize(profile, &when_done)
+      @profile = profile
+      @when_done = when_done
+    end
+
+    def done(view)
+      @when_done.call({ view:, vector: @model.vector }) if @when_done&.respond_to?(:call)
     end
   end
 end

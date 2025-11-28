@@ -3,19 +3,11 @@ require_relative '../lib/geom'
 module Parametric::Tools::XYZTool
 
   def self.as_stage(transformation = IDENTITY, &when_done)
-    stage = Object.new
-    stage.extend self
-    stage.transformation = transformation
-    stage.define_singleton_method :done do |view|
-      when_done.call(@model.start, @model.vectors) if when_done
-      super(view)
-    end
-    stage.singleton_class.class_eval { private :done }
-    stage
+    Stage.new(transformation, &when_done)
   end
 
-  def self.use
-    tool = as_stage
+  def self.use(transformation = IDENTITY)
+    tool = as_stage(transformation) { |params| tool.reset; params[:view].invalidate }
     Sketchup.active_model.select_tool tool
     Sketchup.focus
     tool   
@@ -24,9 +16,7 @@ module Parametric::Tools::XYZTool
   attr_accessor :transformation
 
   def activate
-    @mouse = Sketchup::InputPoint.new
-    @model = Model.new(@transformation || IDENTITY)
-    update_ui
+    reset
   end
 
   def draw(view)
@@ -51,16 +41,14 @@ module Parametric::Tools::XYZTool
   end
 
   def getExtents
-    return unless @model.end
-
     Geom::BoundingBox.new.tap do |bb|
-      bb.add @model.start
-      bb.add @model.end
+      bb.add @model.start if @model.start
+      bb.add @model.end if @model.end
     end
   end
 
   def enableVCB?
-    @model.start
+    @model.valid?
   end
 
   def onCancel(reason, view)
@@ -116,6 +104,13 @@ module Parametric::Tools::XYZTool
     update_vcb_value
   end
 
+  def reset
+    @mouse = Sketchup::InputPoint.new
+    @model = Model.new(@transformation || IDENTITY)
+    update_ui
+    update_vcb_value
+  end
+
   private
 
   def calculate_end_point
@@ -123,9 +118,7 @@ module Parametric::Tools::XYZTool
   end
 
   def done(view)
-    @model = Model.new(@transformation)
-    view.invalidate
-    update_ui
+    raise 'Abstract method'
   end
 
   def update_ui
@@ -145,6 +138,8 @@ module Parametric::Tools::XYZTool
     end
 
     def vectors
+      return [] unless @start && @end
+
       xyz = @start.vector_to(@end)
       xyz.transform! @transformation
       Parametric::Geom.decompose_vector(xyz).select(&:valid?).map { |vector| vector.transform @transformation.inverse }
@@ -153,6 +148,21 @@ module Parametric::Tools::XYZTool
     def valid?
       xyz = vectors
       xyz.count > 1
+    end
+  end
+
+  class Stage
+    include Parametric::Tools::XYZTool
+
+    def initialize(transformation = IDENTITY, &when_done)
+      @transformation = transformation
+      @when_done = when_done
+    end
+
+    private
+
+    def done(view)
+      @when_done&.call({ view:, origin: @model.start, vectors: @model.vectors }) if @when_done&.respond_to?(:call)
     end
   end
 end

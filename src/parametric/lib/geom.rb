@@ -1,11 +1,7 @@
 module Parametric
   module Geom
     def self.decompose_vector(vector)
-      vector.to_a.each_with_index.map do |value, index|
-        params = [0,0,0]
-        params[index] = value
-        ::Geom::Vector3d.new(params)
-      end
+      vector.to_a.each_with_index.map { |len, index| ::Geom::Vector3d.new [0,0].insert(index, len) }
     end
   end
 end
