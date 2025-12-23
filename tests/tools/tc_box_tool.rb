@@ -1,80 +1,127 @@
-require "testup/testcase"
+require_relative '../test_helper'
+require_relative '../support/tools_helper'
 require_relative '../../src/parametric/tools'
-require_relative '../../src/parametric/tools/box_tool'
-require 'forwardable'
 
-class TC_BoxTool < TestUp::TestCase
+module Parametric
+  module Tools
+    module BoxTool
+      module Tests
+        extend Spec::TestsRoot
 
-  class MockTool
+        describe BoxTool do
+          test_helpers Tools::Helpers
 
-    extend Forwardable
-    def_delegator :@mock, :verify, :used?
-    
-    def initialize(retval, *expected_params)
-      @mock = MiniTest::Mock.new
-      @mock.expect :perform, retval, expected_params  
+          let(:transformation) { IDENTITY }
+          let(:view) { Sketchup.active_model.active_view }
+          let(:xyz_tool) { mock_tool(xyz_stage_result, transformation) }
+          let(:profile) { Geom::Rectangle.new ORIGIN, *Geom.decompose_vector(::Geom::Vector3d.new(10,20,0)) }
+          let(:push_pull_tool) { mock_tool(push_pull_stage_result, profile) }
+          let(:push_pull_stage_result) do
+            {
+              view: view,
+              vector: ::Geom::Vector3d.new(0, 0, 30)
+            }
+          end
+          let(:xyz_stage_result) do
+            {
+              view: view,
+              vertex: ORIGIN,
+              vectors: Geom.decompose_vector(ORIGIN.vector_to([10,20,30]))
+            }
+          end
+          
+          before do
+            @truly_xyz = Tools.set_default(:xyz_tool, xyz_tool)
+            @truly_push_pull = Tools.set_default(:push_pull_tool, push_pull_tool)
+          end
+
+          after do
+            Tools.set_default(:xyz_tool, @truly_xyz)
+            Tools.set_default(:push_pull_tool, @truly_push_pull)
+          end
+
+          describe 'workflow' do
+
+            subject do
+              tn = transformation
+              tool_fixture(BoxTool) do
+                @transformation = tn
+              end
+            end
+
+            before do
+              subject.activate
+            end
+
+            context 'when first stage returns flat' do
+
+              test_case_name 'TC_using_push_pull'
+
+              let(:xyz_stage_result) do
+                {
+                  view:,
+                  vertex: ORIGIN,
+                  vectors: [::Geom::Vector3d.new(10, 0, 0), ::Geom::Vector3d.new(0, 20, 0)]
+                }
+              end
+              
+              it 'uses xyz_tool' do
+                expect(xyz_tool).must_be :used?
+              end
+
+              it 'uses push_pull_tool' do
+                expect(push_pull_tool).must_be :used?
+              end
+            end
+
+            context 'when first stage directly returns box' do
+              let(:xyz_stage_result) do
+                {
+                  view: view,
+                  vertex: ORIGIN,
+                  vectors: Geom.decompose_vector(ORIGIN.vector_to([10,20,30]))
+                }
+              end
+
+              test_case_name 'TC_skiping_push_pull'
+              
+              it 'uses xyz_tool' do
+                expect(xyz_tool).must_be :used?
+              end
+
+              it 'skips push_pull_tool' do
+                expect(push_pull_tool).must_be :unused?
+              end
+            end  
+          end
+
+          describe '.as_stage' do
+
+            test_case_name 'TC_stage'
+
+            subject do
+              Parametric::Tools::BoxTool.as_stage { |params| done_flag.call params.transform_values(&:class) }
+            end
+            let(:done_flag) { Minitest::Mock.new.expect(:call, nil, [expected_callback_params]) }
+            let(:expected_callback_params) do
+              { 
+                view: Sketchup::View,
+                vertex: ::Geom::Point3d,
+                vectors: Array
+              }
+            end
+
+            it 'returns Stage instance' do
+              expect(subject).must_be_instance_of Parametric::Tools::BoxTool::Stage
+            end
+
+            it 'activation makes callback with expected params' do
+              subject.activate
+              done_flag.verify
+            end
+          end
+        end  
+      end
     end
-
-    def as_stage(*params, &block)
-      block.call @mock.perform(*params)
-    end
-
-    def skipped?
-      @mock.verify
-      false
-    rescue MockExpectationError
-      true
-    end
-
-    alias unused? skipped?
-  end
-
-  def mock_block(retval,*expected_params)
-    block = MiniTest::Mock.new
-    block.expect(:call, retval, expected_params)
-    block
-  end
-
-  def test_mock_tool
-    expected_params = [2]
-    retval = 4
-    x2_tool = MockTool.new retval, *expected_params # tool receive 2 and passes 4 to the block 
-    block = mock_block(true, 4)
-    assert x2_tool.unused?
-    assert x2_tool.as_stage(2) { |params| block.call(*params) }
-    assert x2_tool.used?
-    assert block.verify
-  end
-
-  def test_push_pull_skipped
-    vectors = [10,20,30].each_with_index.map { |len, index| Geom::Vector3d.new [0,0].insert(index, len) }
-    box_params = [ORIGIN, vectors]
-    profile = [[0,0], [10,0], [10,20], [0,20]].map { |pos| Geom::Point3d.new pos }
-    push_pull_vector = Geom::Vector3d.new 0,0,30
-    xyz_tool = MockTool.new box_params, IDENTITY # gets nothing, returns box_params
-    push_pull_tool = MockTool.new push_pull_vector, profile # gets rectangle, returns 3rd vector
-    Parametric::Tools.set_default :xyz_tool, xyz_tool
-    Parametric::Tools.set_default :push_pull_tool, push_pull_tool 
-    subject = mock_block(nil, *box_params)
-    Parametric::Tools::BoxTool.as_stage { |point, vectors| subject.call(point, vectors) }
-    assert xyz_tool.used?
-    assert push_pull_tool.skipped?
-    assert subject.verify
-  end
-
-  def test_push_pull_used
-    vectors = [10,20].each_with_index.map { |len, index| Geom::Vector3d.new [0,0].insert(index, len) }
-    box_params = [ORIGIN, vectors]
-    profile = [[0,0], [10,0], [10,20], [0,20]].map { |pos| Geom::Point3d.new pos }
-    push_pull_vector = Geom::Vector3d.new 0,0,30
-    xyz_tool = MockTool.new box_params, IDENTITY # gets nothing, returns box_params
-    push_pull_tool = MockTool.new push_pull_vector, profile # gets rectangle, returns 3rd vector
-    Parametric::Tools.set_default :xyz_tool, xyz_tool
-    Parametric::Tools.set_default :push_pull_tool, push_pull_tool 
-    subject = mock_block(nil, *box_params)
-    Parametric::Tools::BoxTool.as_stage { |point, vectors| subject.call(point, vectors) }
-    assert xyz_tool.used?
-    assert push_pull_tool.used?
-    assert subject.verify
   end
 end

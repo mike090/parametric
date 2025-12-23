@@ -1,89 +1,88 @@
 module Parametric
-	module Geom
-		class Plane < Array
-			def initialize(*init_params)
-				init_params = init_params.first if (init_params.length == 1) && init_params.first.is_a?(Array) 
-				
-				raw = Parametric::Geom::Plane.try_convert_to_plane(*init_params)
-				return super raw if raw
+  module Geom
+    class Plane < Array
+      def initialize(params)
+        # [Geom::Point3d.new(1,1,1), ::Geom::Vector3d.new(1,0,0)].flatten returns [Geom::Point3d.new(1,1,1), ::Geom::Vector3d.new(1,0,0)].flatten
+        # [Geom::Point3d.new(1,1,1), ::Geom::Vector3d.new(1,0,0)].flatten! returns nil !
 
-				raise ArgumentError, "Invalid initial params #{init_params.map(&:class)} or points not planar"
-			end
+        case params.map(&:class)
+        when [::Geom::Point3d, ::Geom::Vector3d] # from point and vector
+          vector = params.last
+          projection_to_origin = ORIGIN.project_to_plane(params).vector_to(ORIGIN)
+          raw = vector.normalize.to_a
+          raw << (projection_to_origin.valid? &&
+            projection_to_origin.samedirection?(vector) ? projection_to_origin.length : -1 * projection_to_origin.length)
+          super raw
+        when [Float] * 4, [Integer] * 4 # from raw
+          raise TypeError, 'Invalid raw data' unless params.all?(Numeric) && ::Geom::Vector3d.new(params.first(3)).unitvector?
 
-			def normal
-				::Geom::Vector3d.new first(3)
-			end
+          super params.map(&:to_f)
+        else
+          flatten = params.flatten
+          case flatten.map(&:class)
+          when [::Geom::Point3d] * 2 << ::Geom::Vector3d # from point and ray
+            flatten[-1] = flatten[-2] + flatten[-1]
+            initialize flatten
+          else
+            if flatten.all? ::Geom::Point3d # from point and edge (line) or from points
+              raw = Geom.points_planar? *flatten
+              raise TypeError, 'Points are not planar' unless raw
 
-			def reverse
-				Parametric::Geom::Plane.new(normal.reverse.to_a << -1 * last)
-			end
+              super raw
+            else
+              raise TypeError, "Unexpected params: #{params.map(&:class)}"
+            end
+          end
+        end
+      end
 
-			def internal_position(point)
-				point.transform transformation_2d.inverse
-			end
+      def normal
+        ::Geom::Vector3d.new first(3)
+      end
 
-			def parallel?(plane)
-				normal.parralel? plane.normal
-			end
+      def reverse
+        Plane.new(normal.reverse.to_a << -1 * last)
+      end
 
-			# def intersect_with_plane(plane)
-			# 	return ::Geom.intersect_plane_plane(self, plane) if Parametric::Geom::Plane.try_convert_to_plane(*plane)
+      def internal_position(point)
+        raise TypeError, "point #{point.inspect} are not on plane #{self}" unless point.on_plane?(self)
 
-			# 	return unless line_or_plane.is_a?(Array)
+        point.transform transformation_2d.inverse
+      end
 
-			# 	return ::Geom.intersect_line_plane(line_or_plane, self)
-			# end
+      def parallel?(plane)
+        normal.parallel? plane.normal
+      end
 
-			def intersect_line(line)
-				::Geom.intersect_line_plane(line, self)
-			end
+      def intersect(object)
+        case object
+        when Plane
+          ::Geom.intersect_plane_plane(self, object)
+        when Array
+          case object.map(&:class)
+          when [::Geom::Point3d,::Geom::Vector3d], [::Geom::Point3d]*2
+            ::Geom.intersect_line_plane object, self
+          else
+            raise_intersect_object_type_error object
+          end
+        else
+          raise_intersect_object_type_error object
+        end
+      end
 
-			def inspect
-				"Plane(#{super})"
-			end
+      def inspect
+        "Plane(#{super})"
+      end
 
-			private
+      private
 
-			def transformation_2d
-				::Geom::Transformation.new(ORIGIN.project_to_plane(self), normal)
-			end
+      def transformation_2d
+        @transformation_2d ||= ::Geom::Transformation.new(ORIGIN.project_to_plane(self), normal)
+      end
 
-			def self.try_convert_to_plane(*params)
-
-				# from point and plane normal
-				if params.length == 2 && ::Geom::Vector3d === params.last 
-					point, vector = params
-					vector_from_projection = ORIGIN.project_to_plane(point, vector) - ORIGIN
-					distance = if vector_from_projection.valid?
-						vector_from_projection.samedirection?(vector) ? -1 * vector_from_projection.length : vector_from_projection.length
-					else
-						0.0
-					end
-					return ::Geom::Vector3d.new(vector).normalize.to_a << distance
-				end
-
-				#from raw plane data
-				return params.map(&:to_f) if params.length == 4 && params.all?(Numeric) && ::Geom::Vector3d.new(params.first(3))&.length == 1
-
-				#from points
-				points_planar?(*params.map { |param| ::Geom::Point3d.new(param) })
-
-				#from point and line
-				#...
-			end
-
-			# Returns a plane if all points on plane. Otherwise returns nil
-			#
-			# @param points [Geom::Point3d]
-			# @return [Array, nil] array, representing a plane or nil
-			def self.points_planar?(*points)
-				return if points.length < 3
-
-				plane = ::Geom::fit_plane_to_points points
-				return unless points[3..-1].all? { |point| point.on_plane? plane }
-
-				plane
-			end
-		end
-	end
+      def raise_intersect_object_type_error(object)
+        raise TypeError, "impossible to intersect plane with an object #{object}"
+      end
+    end
+  end
 end

@@ -4,16 +4,13 @@ class Parametric::Geom::Flatten
 
 	attr_reader :faces
 
-	def initialize(profile, vector, from_the_middle = false)
+	def initialize(profile, vector)
 		profile = Parametric::Geom::Polygon.new profile.to_a
 
-		raise ArgumentError, 'vector on profile plane' if profile.plane.normal.perpendicular?(vector)
+		raise TypeError, 'vector on profile plane' if profile.plane.normal.perpendicular?(vector)
 
 		profile.reverse! if profile.plane.normal.angle_between(vector) < 90.degrees
 
-		# profile = profile.map do |vertex|
-		# 	vertex.offset(vector.reverse, vector.length * 0.5)
-		# end if from_the_middle
 		@profile = profile.to_a
 		@vector = vector
 	end

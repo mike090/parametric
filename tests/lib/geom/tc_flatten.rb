@@ -1,26 +1,76 @@
-require 'testup/testcase'
+require_relative '../../test_helper'
 require 'parametric/lib/geom/flatten'
 
-class TC_Flatten < TestUp::TestCase
-	def test_vertices
-		pos = [0.0,0.0,0.0], [0.0,1.0,0.0], [1.0,1.0,0.0], [1.0,0.0,0.0]
-		subject = Parametric::Geom::Flatten.new(pos, Z_AXIS).vertices
-		assert_empty pos - subject.map(&:to_a)
-		assert_equal 8, subject.count
-	end
+module Parametric
+  module Geom
+    class Flatten
+      module Tests
+        extend Spec::TestsRoot
 
-	def test_edges
-		pos = [0.0,0.0,0.0], [0.0,1.0,0.0], [1.0,1.0,0.0], [1.0,0.0,0.0]
-		subject = Parametric::Geom::Flatten.new(pos, Z_AXIS).edges
-		assert_equal 12, subject.count
-		assert_equal 12, subject.map(&:to_set).uniq.count
-		assert subject.all? { |p1, p2| (p2 - p1).length == 1 }
-	end
+        describe Flatten do
 
-	def test_sides
-		pos = [0.0,0.0,0.0], [0.0,0.0,1.0], [0.0,1.0,1.0], [0.0,1.0,0.0]
-		subject = Parametric::Geom::Flatten.new(pos, X_AXIS).sides
-		assert_equal 6, subject.count
-		assert_equal Geom::Vector3d.new(0,0,0), subject.map { |side| side.plane.normal }.reduce(&:*)
-	end
+          subject { Flatten.new *params }
+
+          describe 'initialization' do
+            attr_reader :params
+
+            test_case_name 'TC_initialization'
+
+            let(:points) { [[1,1], [1,3], [3,3], [3,1]].map { |pos| ::Geom::Point3d.new pos } }
+
+            test 'initialization with array of points' do
+              @params = [points, Z_AXIS]
+              assert_instance_of Flatten, subject
+            end
+
+            test 'initialization with polygon' do
+              @params = [Polygon.new(points), Z_AXIS.reverse]
+              assert_instance_of Flatten, subject
+            end
+
+            it 'raises with invalid vector' do
+              @params = [points, X_AXIS]
+              assert_raises(TypeError) { subject }
+            end
+          end
+
+          let(:n) { 6 }
+          let(:profile) do
+            trn = ::Geom::Transformation.rotation ORIGIN, Z_AXIS, 360.degrees/n
+            vertices = [::Geom::Point3d.new(100.mm,0,1)]
+            (n-1).times { vertices << (vertices.last.transform trn) }
+            vertices
+          end
+          let(:params) { [profile, ::Geom::Vector3d.new(0,0,30.mm)] }
+
+          test_case_name 'TC_Flatten'
+
+          test '#vertices' do
+            assert_instance_of Array, subject.vertices
+            assert_equal n*2, subject.vertices.count
+            assert subject.vertices.all?(::Geom::Point3d)
+            assert profile.all? do |point|
+              subject.vertices.include? point
+              subject.vertices.include? point.offset(params.last)
+            end
+          end
+
+          test '#edges' do
+            assert_instance_of Array, subject.edges
+            assert_equal [[::Geom::Point3d]*2]*3*n,
+              subject.edges.map { |edge| edge.map(&:class) }
+          end
+
+          test '#sides' do
+            assert_instance_of Array, subject.sides
+            assert_equal [Polygon]*(n+2), subject.sides.map(&:class)
+            center = subject.bounds.center
+            assert subject.sides.all? do |side| # test sides normals outside direction
+              center.vector_to(center.project_to_plane side.plane).samedirection? side.plane.normal
+            end
+          end
+        end
+      end
+    end
+  end
 end

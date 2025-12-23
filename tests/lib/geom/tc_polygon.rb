@@ -1,50 +1,90 @@
-require 'testup/testcase'
+require_relative '../../test_helper'
 require 'parametric/lib/geom/polygon'
 
-class TC_Polygon < TestUp::TestCase
-	def test_plane
-		points = [ORIGIN, [1,0,0], [0,1,0]]
-		assert_equal Z_AXIS.to_a << 0, Parametric::Geom::Polygon.new(points).plane
-		assert_equal Z_AXIS.reverse.to_a << 0, Parametric::Geom::Polygon.new(points.reverse).plane
-	end
+module Parametric
+  module Geom
+    class Polygon
+      module Tests
+        extend Spec::TestsRoot
 
-	def test_vrtices
-		subject = Parametric::Geom::Polygon.new ORIGIN, [1,0,0], [0,1,0]
-		assert_equal [ORIGIN, [1,0,0], [0,1,0]], subject.vertices.map(&:to_a)
-	end
+        describe Polygon do
+          let(:vertices) do
+            n = 5
+            trn = ::Geom::Transformation.rotation(ORIGIN, Z_AXIS, 360.degrees / n)
+            vertices = [::Geom::Point3d.new(10,0,3)]
+            (n - 1).times { vertices << vertices.last.transform(trn) }
+            vertices
+          end
 
-	def test_edges
-		subject = Parametric::Geom::Polygon.new [0,0,0], [1,0,0], [0,1,0]
-		assert_equal(
-			[
-				[ Geom::Point3d.new(0,0,0), Geom::Point3d.new(1,0,0) ],
-				[ Geom::Point3d.new(1,0,0), Geom::Point3d.new(0,1,0) ],
-				[ Geom::Point3d.new(0,1,0), Geom::Point3d.new(0,0,0) ]
-			],  subject.edges
-		)
-	end
+          subject { Polygon.new *vertices }
 
-	def test_reverse!
-		positions = [ [0,0,0], [1,0,0], [1,1,0], [0,1,0] ]
-		subject = Parametric::Geom::Polygon.new positions
-		subject.reverse!
-		assert_equal [0,0,-1,0], subject.plane
-		assert_equal [ [0,0,0],[0,1,0],[1,1,0],[1,0,0] ], subject.vertices.map(&:to_a)
-	end
+          test_case_name 'TC_Polygon'
 
-	def test_shift
-		pos = [ [-1,-1,0],[1,-1,0],[1,1,0],[-1,1,0] ]
-		source = Parametric::Geom::Polygon.new pos
-		subject = source.shift(Z_AXIS,1)
-		assert_instance_of Parametric::Geom::Polygon, subject
-		assert_equal [ [-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1] ], subject.map(&:to_a)
-		assert_equal [ [-1,-1,0],[1,-1,0],[1,1,0],[-1,1,0] ], source.map(&:to_a)
-	end
+          test 'initialization with points' do
+            refute_nil subject
+          end
 
-	def test_offset
-		source = Parametric::Geom::Polygon.new [ [0,0,0], [5,0,0], [5,5,0], [0,5,0] ]
-		subject = source.offset(-1)
-		assert_instance_of Parametric::Geom::Polygon, subject
-		assert_equal [ [1,1,0], [4,1,0], [4,4,0], [1,4,0] ], subject.map(&:to_a)
-	end
+          test '#vertices' do
+            expect(subject.vertices).must_be_instance_of Array
+            assert subject.vertices.all?(::Geom::Point3d)
+            expect(subject.vertices.count).must_equal 5
+          end
+
+          test '#edges' do
+            expect(subject.edges).must_be_instance_of Array
+            expect(subject.edges.count).must_equal 5
+            assert subject.edges.all?(Array)
+            assert (subject.edges.map &:class).all? { |item| item === [::Geom::Point3d]*2 }
+            vectors = subject.edges.map { |p0, p1| p1 - p0 }
+            expect(vectors.reduce(&:+).length).must_equal 0
+          end
+
+          test '#plane' do
+            expect(subject.plane).must_be_instance_of Plane
+            expect(subject.plane).must_equal [0,0,1,-3]
+          end
+
+          test '#center' do
+            expect(subject.center).must_equal ORIGIN.offset([0,0,3])
+          end
+
+          test '#reverse' do
+            new_polygon = subject.reverse
+            assert_instance_of Polygon, new_polygon
+            refute_same subject, new_polygon
+            assert_equal subject.vertices.first, new_polygon.vertices.first
+            assert_equal subject.vertices.reverse.rotate(-1), new_polygon.vertices
+          end
+
+          test '#reverse!' do
+            assert_equal [0,0,1,-3], subject.plane
+            assert_same subject, subject.reverse!
+            assert_equal [0,0,-1,3], subject.plane
+            assert_equal ::Geom::Point3d.new(10,0,3), subject.vertices.first
+          end
+
+          test '#point_in' do
+            point = ::Geom::Point3d.new(1,1,3)
+            assert point.on_plane?(subject.plane)
+            assert subject.point_in?(point)
+            point = ::Geom::Point3d.new(1,1,2)
+            refute point.on_plane?(subject.plane)
+            refute subject.point_in?(point) # do'nt raises if point ar'nt on plane
+            point = ::Geom::Point3d.new(12,0,3)
+            assert point.on_plane?(subject.plane)
+            refute subject.point_in?(point)
+          end
+
+          test '#offset' do
+            new_polygon = subject.offset 1
+            assert_instance_of Polygon, new_polygon
+            refute_same subject, new_polygon
+            assert_equal 5, new_polygon.vertices.count
+            vectors = new_polygon.vertices.zip(subject.vertices).map { |p0,p1| p1 - p0 }
+            assert vectors.all? { |vector| vector.length == vectors.first.length }
+          end
+        end
+      end
+    end
+  end
 end

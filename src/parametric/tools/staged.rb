@@ -1,62 +1,30 @@
 module Parametric
   module Tools
     module Staged
-      def self.included(cls)
-        cls.extend ClassMethods 
+
+      def respond_to?(symbol, include_all=false)
+        super || @stage&.respond_to?(symbol)
+      end
+
+      def method_missing(symbol, *args)
+        try @stage, symbol, *args
       end
 
       private
 
-      def active_stage
-        stages.last
+      def try(receiver, method, *args)
+        receiver.public_send(method, *args) if receiver&.respond_to? method
       end
 
-      def next_stage(stage)
-        try stage, :activate
-        stages << stage
-        stage
+      def using(tool, *args, &block)
+        tool = Tools.default(tool)
+        use tool.as_stage(*args, &block)
       end
 
-      # Tries to undo the stages changes by sequentially calling
-      # the #undo method for each item from the stages stack
-      # NOTE: the STAGE #undo method should return the logical truth if the changes have been undone
-      # @return [Object, nil] the stage where the undo method returned the logical truth
-      def undo(*params)
-        return if stages.empty?
-
-        try(active_stage, :undo, *params) || previous_stage_undo(*params)
-      end
-
-      def previous_stage_undo(*params)
-        pop_stage && undo(*params)
-      end
-
-      def pop_stage
-        return if stages.count == 0
-        
-        stage = stages.pop
-        try stage, :deactivate
-        try stage, :reset
-      end
-
-      def stages
-        @stages ||= []
-      end
-
-      def try(receiver, method, *params)
-        receiver.public_send(method, *params) if receiver.respond_to? method
-      end
-
-      module ClassMethods
-        def staged_methods(*methods)
-          shim = Module.new
-          methods.each do |method_name|
-            shim.define_method(method_name) do |*args|
-              active_stage.public_send(method_name, *args) if active_stage&.respond_to? method_name
-            end
-          end
-          self.include shim
-        end
+      def use (stage)
+        try @stage, :deactivate, Sketchup.active_model.active_view
+        @stage = stage
+        @stage.activate
       end
     end
   end

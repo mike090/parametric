@@ -2,7 +2,7 @@ module Parametric::Tools::PushPullTool
 
   attr_writer :profile
 
-  def self.as_sage(profile, &when_done)
+  def self.as_stage(profile, &when_done)
     Stage.new(profile, &when_done)
   end
 
@@ -55,7 +55,7 @@ module Parametric::Tools::PushPullTool
       p0.vector_to p1
     else
       pickray = view.pickray(x, y)
-      intersection = @model.test_plane.intersect_line(pickray)
+      intersection = @model.test_plane.intersect(pickray)
       intersection.project_to_plane(@model.profile.plane).vector_to(intersection)
     end
     view.tooltip = @mouse.tooltip
@@ -85,7 +85,7 @@ module Parametric::Tools::PushPullTool
   private
 
   def done(view)
-    raise 'Abstract method'
+    raise NotImplementedError, "heritors responsibility"
   end
 
   def update_ui

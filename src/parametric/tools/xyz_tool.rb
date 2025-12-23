@@ -118,7 +118,7 @@ module Parametric::Tools::XYZTool
   end
 
   def done(view)
-    raise 'Abstract method'
+    raise NotImplementedError, "heritors responsibility"
   end
 
   def update_ui
@@ -142,7 +142,7 @@ module Parametric::Tools::XYZTool
 
       xyz = @start.vector_to(@end)
       xyz.transform! @transformation
-      Parametric::Geom.decompose_vector(xyz).select(&:valid?).map { |vector| vector.transform @transformation.inverse }
+      Parametric::Geom.decompose_vector(xyz).map { |vector| vector.transform @transformation.inverse }
     end
 
     def valid?
@@ -162,7 +162,7 @@ module Parametric::Tools::XYZTool
     private
 
     def done(view)
-      @when_done&.call({ view:, origin: @model.start, vectors: @model.vectors }) if @when_done&.respond_to?(:call)
+      @when_done.call({ view:, vertex: @model.start, vectors: @model.vectors }) if @when_done&.respond_to?(:call)
     end
   end
 end

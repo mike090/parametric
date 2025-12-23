@@ -1,37 +1,55 @@
-require_relative '../lib/geom/box'
+require_relative 'staged'
 
-module Parametric::Tools::BoxTool
-  # helps to define a virtual box
+module Parametric
+  module Tools
+    # helps to define a virtual box
+    module BoxTool
+      include Staged
+      def self.as_stage(transformation = IDENTITY, &when_done)
+        Stage.new(transformation, &when_done)
+      end
 
-  def self.as_stage(transformation = IDENTITY, &when_done)
-    @when_done = when_done
+      class Stage
+        include BoxTool
 
-    using :xyz_tool, transformation do |point, vectors|
-      if is_3d?(point, vectors)
-        done(point, vectors)
-      else
-        using :push_pull_tool, rectangle(point, vectors) do |vector|
-          vectors << vector
-          done(point, vectors)
+        def initialize(transformation, &when_done)
+          @transformation = transformation
+          @when_done = when_done
+        end
+
+        def done(view)
+          @when_done.call(@model) if @when_done&.respond_to? :call
         end
       end
+
+      def activate
+        run
+      end
+
+      private
+
+      def run
+        using :xyz_tool, @transformation do |xyz_result|
+          @model = xyz_result
+          if three_dim?
+            done(@model.fetch :view)
+          else
+            profile = Geom::Rectangle.new *@model.fetch_values(:vertex,:vectors).flatten
+            using :push_pull_tool, profile do |push_pull_result|
+              @model[:vectors][2] = push_pull_result[:vector]
+              done(push_pull_result.fetch :view)
+            end
+          end
+        end
+      end
+
+      def done(view)
+        raise NotImplementedError, "heritors responsibility"
+      end
+
+      def three_dim?
+        @model[:vectors].count == 3
+      end
     end
-  end
-
-  def self.is_3d?(point, vectors)
-    vectors.count == 3
-  end
-
-  def self.rectangle(p0, vectors)
-    v1, v2 = vectors
-    [p0, p0 + v1, p0 + v1 + v2, p0 + v2]
-  end
-
-  def self.done(point, vectors)
-    @when_done.call(point, vectors) if @when_done
-  end
-
-  def self.using(tool, *params, &block)
-    Parametric::Tools.default(tool).as_stage(*params, &block)
   end
 end
