@@ -64,8 +64,20 @@ module Parametric
             assert_equal expected_vertices, connected
           end
 
-          test 'center' do
+          test '#center' do
             assert_equal ::Geom::Point3d.new(20,25,20), subject.center
+          end
+
+          test 'sides_normals_direction' do
+            out_durection = proc { |center, side| center.vector_to(center.project_to_plane side.plane).normalize }
+            center = subject.center
+
+            subject = Box.new *default_params
+            assert subject.sides.all? { |side| side.plane.normal.samedirection? out_durection.call(center, side) }
+
+            default_params[2], default_params[1] = default_params[1,2]
+            subject = Box.new *default_params
+            assert subject.sides.all? { |side| side.plane.normal.samedirection? out_durection.(center, side) }
           end
         end
       end

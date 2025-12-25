@@ -10,7 +10,7 @@ module Parametric
           initialize params.first, *Geom.decompose_vector(params.last)
         when [::Geom::Point3d, [::Geom::Vector3d] * 3].flatten
           @vertex = params.first
-          @vectors = params.last(3)
+          @vectors = regularize_vectors params.last(3)
         else
           raise ArgumentError, 'expected Point3d and one or three Vector3d'
         end
@@ -69,6 +69,16 @@ module Parametric
           pos = vts[0].zip(*vts[1..]).map { |vals| vals.reduce(&:+)/vals.length }
           ::Geom::Point3d.new pos
         end
+      end
+
+      private
+
+      # sets the outside direction of the box's sides normals
+      def regularize_vectors(vectors)
+        v1, v2, v3 = vectors
+        rtn_90 = ::Geom::Transformation.rotation(ORIGIN, v3, 90.degrees)
+        vectors[0], vectors[1] = vectors[1], vectors[0] unless v1.transform(rtn_90).samedirection? v2
+        vectors
       end
     end
   end
