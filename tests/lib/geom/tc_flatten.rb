@@ -37,9 +37,9 @@ module Parametric
           let(:n) { 6 }
           let(:profile) do
             trn = ::Geom::Transformation.rotation ORIGIN, Z_AXIS, 360.degrees/n
-            vertices = [::Geom::Point3d.new(100.mm,0,1)]
-            (n-1).times { vertices << (vertices.last.transform trn) }
-            vertices
+            (n-1).times.reduce([::Geom::Point3d.new(100.mm,0,1)]) do |vertices|
+              vertices << vertices.last.transform(trn)
+            end
           end
           let(:params) { [profile, ::Geom::Vector3d.new(0,0,30.mm)] }
 

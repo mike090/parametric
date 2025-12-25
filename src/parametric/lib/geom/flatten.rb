@@ -45,4 +45,8 @@ class Parametric::Geom::Flatten
 			vertices.each { |vertex| bb.add vertex }
 		end
 	end
+
+	def inspect
+		"#{super.match(/^[^\s]+/)[0]}>"
+	end
 end

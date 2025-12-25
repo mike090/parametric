@@ -74,7 +74,7 @@ module Parametric
       end
 
       def inspect
-        "Plane(#{super})"
+        "<#{self.class} #{super}>"
       end
 
       private

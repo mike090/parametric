@@ -101,6 +101,10 @@ module Parametric
         point.on_plane?(plane) &&
           ::Geom.point_in_polygon_2D(plane.internal_position(point), self.map { |pnt| plane.internal_position(pnt) }, check_border)
       end
+
+      def inspect
+        "<#{self.class} #{super}>"
+      end
     end
   end
 end

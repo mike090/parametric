@@ -69,6 +69,10 @@ module Parametric
 				@plane ||= Plane.new [@vertex, @vectors].flatten
 			end
 
+			def inspect
+				"#{super.match(/^[^\s]+/)[0]} #{[@vertex, @vectors].flatten.inspect}>"
+			end
+
 			private
 
 			def offset_params(value)

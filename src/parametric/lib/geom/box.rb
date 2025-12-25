@@ -17,7 +17,7 @@ module Parametric
       end
 
       def inspect
-        "#{super.match(/^[^\s]+/)[0]}>"
+        "#{super.match(/^[^\s]+/)[0]} #{[@vertex, @vectors].flatten.inspect}>"
       end
 
       def sides
