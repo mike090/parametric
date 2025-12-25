@@ -1,7 +1,7 @@
 require_relative 'tools/xyz_tool'
 require_relative 'tools/push_pull_tool'
 require_relative 'tools/box_tool'
-require_relative 'tools/module_tool'
+require_relative 'tools/cabinet_tool'
 
 VK_TAB = 9
 VK_ESCAPE = 27

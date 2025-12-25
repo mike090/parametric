@@ -7,12 +7,12 @@ require_relative '../../src/parametric/tools'
 #   Geom::Point3d.new(300.mm, 100.mm, 150.mm),
 #   Parametric::Geom.decompose_vector(Geom::Vector3d.new 450.mm,570.mm,720.mm)
 # ].flatten
-# tool = Parametric::Tools::ModuleTool::ModuleBuilder.new box_params
+# tool = Parametric::Tools::CabinetTool::BuilderStage.new box_params
 # model.select_tool tool
 
 module Parametric
   module Tools
-    class ModuleTool
+    class CabinetTool
       class Model
         module Tests
           extend Spec::TestsRoot
@@ -154,16 +154,16 @@ module Parametric
         end
       end
 
-      class ModuleBuilder
+      class BuilderStage
       # SU hides exceptions that occur during the tool workflow
       # To make sure they aren't raises at least in typical cases
 
         module Tests
           extend Spec::TestsRoot
 
-          describe ModuleBuilder do
+          describe BuilderStage do
             describe '#draw' do
-              subject { ModuleBuilder.new box_params }
+              subject { BuilderStage.new box_params }
               let(:box_params) do
                 [
                   ::Geom::Point3d.new(100.mm,100.mm,150.mm),
