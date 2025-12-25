@@ -17,6 +17,9 @@ module Parametric
           raise TypeError, 'Invalid raw data' unless params.all?(Numeric) && ::Geom::Vector3d.new(params.first(3)).unitvector?
 
           super params.map(&:to_f)
+        when [::Geom::Point3d, [::Geom::Vector3d]*2].flatten # from point and two vectos
+          point, v1, v2  = params
+          initialize [point, point + v1, point + v2]
         else
           flatten = params.flatten
           case flatten.map(&:class)

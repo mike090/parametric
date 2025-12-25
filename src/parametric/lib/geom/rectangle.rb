@@ -8,7 +8,7 @@ module Parametric
 
 			attr_reader :vertex, :vectors
 
-			def_delegators :polygon, :each, :vertices, :edges, :plane, :center, :point_in?
+			def_delegators :polygon, :each, :vertices, :edges, :center, :point_in?
 
 			def initialize(vertex, *vectors)
 				raise ArgumentError, 'expeced two perpendicular vectors' unless
@@ -39,16 +39,18 @@ module Parametric
 			end
 
 			def shift!(value)
-				return if value.is_a?(Numeric) && value.zero?
+				return self if value.is_a?(Numeric) && value.zero?
 
 				vector = plane.normal # self.plane() restores @polygon
 				@polygon = nil
-				@vertex.offset! vector, value
+				@plane = nil
+				@vertex = @vertex.offset vector, value
 				self
 			end
 
 			def reverse!
 				@polygon = nil
+				@plane = nil
 				@vectors.rotate!
 				self
 			end
@@ -61,6 +63,10 @@ module Parametric
 				return unless rectangle.instance_of? Rectangle
 
 				@vertex == rectangle.vertex && @vectors == rectangle.vectors
+			end
+
+			def plane
+				@plane ||= Plane.new [@vertex, @vectors].flatten
 			end
 
 			private
