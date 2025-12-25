@@ -145,10 +145,6 @@ module Parametric
         def test_enable_VCB
           refute subject.enableVCB?
           subject.model.start = ::Geom::Point3d.new 1,2,3
-          refute subject.enableVCB?
-          subject.model.end = ::Geom::Point3d.new 1,2,3
-          refute subject.enableVCB?
-          subject.model.end = ::Geom::Point3d.new 4,5,6
           assert subject.enableVCB?
         end
       end

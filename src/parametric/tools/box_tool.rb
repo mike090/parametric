@@ -19,6 +19,7 @@ module Parametric
 
         def done(view)
           @when_done.call(@model) if @when_done&.respond_to? :call
+          view.invalidate
         end
       end
 

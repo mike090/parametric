@@ -124,6 +124,7 @@ module Parametric::Tools::PushPullTool
 
     def done(view)
       @when_done.call({ view:, vector: @model.vector }) if @when_done&.respond_to?(:call)
+      view.invalidate
     end
   end
 end

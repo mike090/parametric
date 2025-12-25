@@ -48,7 +48,7 @@ module Parametric::Tools::XYZTool
   end
 
   def enableVCB?
-    @model.valid?
+    @model.start
   end
 
   def onCancel(reason, view)
@@ -163,6 +163,7 @@ module Parametric::Tools::XYZTool
 
     def done(view)
       @when_done.call({ view:, vertex: @model.start, vectors: @model.vectors }) if @when_done&.respond_to?(:call)
+      view.invalidate
     end
   end
 end
