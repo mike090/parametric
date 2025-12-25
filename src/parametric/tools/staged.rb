@@ -24,7 +24,7 @@ module Parametric
       def use (stage)
         try @stage, :deactivate, Sketchup.active_model.active_view
         @stage = stage
-        @stage.activate
+        try @stage, :activate
       end
     end
   end

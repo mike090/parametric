@@ -34,7 +34,7 @@ module Parametric
           if three_dim?
             done(@model.fetch :view)
           else
-            profile = Geom::Rectangle.new *@model.fetch_values(:vertex,:vectors).flatten
+            profile = Geom::Rectangle.new(*@model.fetch_values(:vertex,:vectors).flatten).to_a
             using :push_pull_tool, profile do |push_pull_result|
               @model[:vectors][2] = push_pull_result[:vector]
               done(push_pull_result.fetch :view)

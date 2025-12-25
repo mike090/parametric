@@ -14,7 +14,14 @@ module Parametric
           let(:transformation) { IDENTITY }
           let(:view) { Sketchup.active_model.active_view }
           let(:xyz_tool) { mock_tool(xyz_stage_result, transformation) }
-          let(:profile) { Geom::Rectangle.new ORIGIN, *Geom.decompose_vector(::Geom::Vector3d.new(10,20,0)) }
+          let(:profile) do
+            [
+              ::Geom::Point3d.new(0,0),
+              ::Geom::Point3d.new(10,0),
+              ::Geom::Point3d.new(10,20),
+              ::Geom::Point3d.new(0,20)
+            ]
+          end
           let(:push_pull_tool) { mock_tool(push_pull_stage_result, profile) }
           let(:push_pull_stage_result) do
             {
