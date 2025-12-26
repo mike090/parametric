@@ -1,5 +1,5 @@
 require_relative 'test_helper'
-require_relative '../src/parametric/tools'
+require 'parametric/tools'
 
 module Parametric
   class TC_Tools < TestUp::TestCase

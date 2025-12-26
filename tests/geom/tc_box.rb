@@ -1,5 +1,5 @@
-require_relative '../../test_helper'
-require 'parametric/lib/geom/box'
+require_relative '../test_helper'
+require 'parametric/geom/box'
 
 module Parametric
   module Geom

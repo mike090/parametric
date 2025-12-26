@@ -1,5 +1,5 @@
 require 'testup/testcase'
-require_relative '../../src/parametric/lib/geom'
+require 'parametric/geom'
 
 module Parametric
   module Geom

@@ -7,15 +7,6 @@ module Parametric
         ::Geom::Vector3d.new [0,0].insert(index, len)
       end.select(&:valid?)
     end
-
-    def self.points_planar?(*points)
-      return if points.length < 3
-
-      plane = ::Geom.fit_plane_to_points *points
-      return unless points[3..-1].all? { |point| point.on_plane? plane }
-
-      plane
-    end
   end
 end
 

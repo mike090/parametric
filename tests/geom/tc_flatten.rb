@@ -1,5 +1,5 @@
-require_relative '../../test_helper'
-require 'parametric/lib/geom/flatten'
+require_relative '../test_helper'
+require 'parametric/geom/flatten'
 
 module Parametric
   module Geom

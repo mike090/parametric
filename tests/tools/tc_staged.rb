@@ -1,5 +1,5 @@
 require_relative '../test_helper'
-require_relative '../../src/parametric/tools/staged'
+require 'parametric/tools/staged'
 require 'forwardable'
 
 module Parametric

@@ -1,4 +1,4 @@
-require_relative '../lib/geom'
+require_relative '../geom'
 
 module Parametric::Tools::XYZTool
 

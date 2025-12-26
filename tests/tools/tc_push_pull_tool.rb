@@ -1,5 +1,5 @@
 require_relative '../test_helper'
-require_relative '../../src/parametric/tools/push_pull_tool'
+require 'parametric/tools/push_pull_tool'
 
 module Parametric
   module Tools

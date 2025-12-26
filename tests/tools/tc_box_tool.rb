@@ -1,6 +1,6 @@
 require_relative '../test_helper'
 require_relative '../support/tools_helper'
-require_relative '../../src/parametric/tools'
+require 'parametric/tools'
 
 module Parametric
   module Tools

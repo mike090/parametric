@@ -1,5 +1,5 @@
 require "testup/testcase"
-require_relative '../../src/parametric/lib/params'
+require 'parametric/lib/params'
 
 class TC_Params < TestUp::TestCase
 	

@@ -1,6 +1,6 @@
 require "testup/testcase"
-require_relative '../../src/parametric/lib/params'
-require_relative '../../src/parametric/lib/environ'
+require 'parametric/lib/params'
+require 'parametric/lib/environ'
 
 class TC_Environ < TestUp::TestCase
 

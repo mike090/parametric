@@ -1,5 +1,5 @@
 require_relative '../test_helper'
-require_relative '../../src/parametric/tools/xyz_tool'
+require 'parametric/tools/xyz_tool'
 
 module Parametric
   module Tools

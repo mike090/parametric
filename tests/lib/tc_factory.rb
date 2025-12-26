@@ -1,7 +1,7 @@
 require "testup/testcase"
-require_relative '../../src/parametric/lib/params'
-require_relative '../../src/parametric/lib/environ'
-require_relative '../../src/parametric/lib/factory'
+require 'parametric/lib/params'
+require 'parametric/lib/environ'
+require 'parametric/lib/factory'
 
 class TC_Factory < TestUp::TestCase
 	def test_requered_params_inheritance

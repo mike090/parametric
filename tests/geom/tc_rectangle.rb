@@ -1,5 +1,5 @@
-require_relative '../../test_helper'
-require 'parametric/lib/geom/rectangle'
+require_relative '../test_helper'
+require 'parametric/geom/rectangle'
 
 module Parametric
   module Geom

@@ -1,5 +1,5 @@
-require_relative '../../test_helper'
-require 'parametric/lib/geom/polygon'
+require_relative '../test_helper'
+require 'parametric/geom/polygon'
 
 module Parametric
   module Geom

@@ -1,6 +1,6 @@
 require "testup/testcase"
-require_relative '../../src/parametric/lib/factory'
-require_relative '../../src/parametric/lib/factory_builder'
+require 'parametric/lib/factory'
+require 'parametric/lib/factory_builder'
 
 class TC_FactoryBuilder < TestUp::TestCase
 	attr_accessor :subject, :factory_class

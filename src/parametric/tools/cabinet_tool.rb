@@ -1,6 +1,6 @@
 require_relative 'staged'
 require_relative 'colors'
-require_relative '../lib/geom/box'
+require_relative '../geom/box'
 
 module Parametric
   module Tools

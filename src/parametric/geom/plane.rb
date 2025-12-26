@@ -1,5 +1,15 @@
 module Parametric
   module Geom
+
+    def self.points_planar?(*points)
+      return if points.length < 3
+
+      plane = ::Geom.fit_plane_to_points *points
+      return unless points[3..-1].all? { |point| point.on_plane? plane }
+
+      plane
+    end
+
     class Plane < Array
       def initialize(params)
         # [Geom::Point3d.new(1,1,1), ::Geom::Vector3d.new(1,0,0)].flatten returns [Geom::Point3d.new(1,1,1), ::Geom::Vector3d.new(1,0,0)].flatten

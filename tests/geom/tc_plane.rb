@@ -1,5 +1,5 @@
-require_relative '../../test_helper'
-require 'parametric/lib/geom/plane'
+require_relative '../test_helper'
+require 'parametric/geom/plane'
 
 module Parametric
   module Geom
