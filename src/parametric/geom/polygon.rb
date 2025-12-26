@@ -35,7 +35,7 @@ module Parametric
       # @param distance [Numeric] дистанция смещения
       # @return [Parametric::Geom::Polygon] новый полигон
       def shift(vector, distance = vector.length)
-        Parametric::Geom::Polygon.new self.map { |vertex| vertex.offset vector, distance }
+        Polygon.new self.map { |vertex| vertex.offset vector, distance }
       end
 
       # Плоскость полигона
@@ -51,7 +51,7 @@ module Parametric
       # @param keep_vertices_count [true, false] сохранять соличество вершин (в случае если три вершины лежат на одной стороне)
       # @return [Parametric::Geom::Polygon] полигон
       def offset(distance, keep_count = false)
-        return Parametric::Geom::Polygon.new(self) if distance.zero?
+        return Polygon.new(self) if distance.zero?
 
         angle = distance.negative? ? 90.degrees : -90.degrees
         rotation = ::Geom::Transformation.rotation(ORIGIN, plane.normal, angle)
@@ -63,7 +63,7 @@ module Parametric
         intersections = guides.rotate(-1).zip(guides).map do |line1, line2|
           ::Geom.intersect_line_line(line1, line2) || (line2.first if keep_count)
         end.compact
-        Parametric::Geom::Polygon.new intersections
+        Polygon.new intersections
       end
 
       # Возвращает новый многоугольник с инвертированной плоскостью

@@ -223,6 +223,7 @@ module Parametric
               y.reverse!
             end
             panel_position = ::Geom::Transformation.new x, y, z, origin
+            panel_params.map! { |param| param.transform panel_position.inverse }
             panel_model = Geom::Box.new *panel_params
 
             Sketchup.active_model.start_operation 'Add panel'

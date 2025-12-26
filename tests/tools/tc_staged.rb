@@ -12,7 +12,7 @@ module Parametric
 
           subject do
             tool = Class.new do
-              include Parametric::Tools::Staged
+              include Staged
 
               attr_writer :stage
             end.new

@@ -30,7 +30,7 @@ module Parametric
       private
 
       def run
-        using :xyz_tool, @transformation do |xyz_result|
+        using :decomposition_tool, @transformation do |xyz_result|
           @model = xyz_result
           if three_dim?
             done(@model.fetch :view)

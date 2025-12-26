@@ -13,7 +13,7 @@ module Parametric
 
           let(:transformation) { IDENTITY }
           let(:view) { Sketchup.active_model.active_view }
-          let(:xyz_tool) { mock_tool(xyz_stage_result, transformation) }
+          let(:decomposition_tool) { mock_tool(decomposition_stage_result, transformation) }
           let(:profile) do
             [
               ::Geom::Point3d.new(0,0),
@@ -29,7 +29,7 @@ module Parametric
               vector: ::Geom::Vector3d.new(0, 0, 30)
             }
           end
-          let(:xyz_stage_result) do
+          let(:decomposition_stage_result) do
             {
               view: view,
               vertex: ORIGIN,
@@ -38,12 +38,12 @@ module Parametric
           end
           
           before do
-            @truly_xyz = Tools.set_default(:xyz_tool, xyz_tool)
+            @truly_decomposition = Tools.set_default(:decomposition_tool, decomposition_tool)
             @truly_push_pull = Tools.set_default(:push_pull_tool, push_pull_tool)
           end
 
           after do
-            Tools.set_default(:xyz_tool, @truly_xyz)
+            Tools.set_default(:decomposition_tool, @truly_decomposition)
             Tools.set_default(:push_pull_tool, @truly_push_pull)
           end
 
@@ -64,7 +64,7 @@ module Parametric
 
               test_case_name 'TC_using_push_pull'
 
-              let(:xyz_stage_result) do
+              let(:decomposition_stage_result) do
                 {
                   view:,
                   vertex: ORIGIN,
@@ -72,8 +72,8 @@ module Parametric
                 }
               end
               
-              it 'uses xyz_tool' do
-                expect(xyz_tool).must_be :used?
+              it 'uses decomposition tool' do
+                expect(decomposition_tool).must_be :used?
               end
 
               it 'uses push_pull_tool' do
@@ -82,7 +82,7 @@ module Parametric
             end
 
             context 'when first stage directly returns box' do
-              let(:xyz_stage_result) do
+              let(:decomposition_stage_result) do
                 {
                   view: view,
                   vertex: ORIGIN,
@@ -92,8 +92,8 @@ module Parametric
 
               test_case_name 'TC_skiping_push_pull'
               
-              it 'uses xyz_tool' do
-                expect(xyz_tool).must_be :used?
+              it 'uses decomposition tool' do
+                expect(decomposition_tool).must_be :used?
               end
 
               it 'skips push_pull_tool' do
@@ -107,7 +107,7 @@ module Parametric
             test_case_name 'TC_stage'
 
             subject do
-              Parametric::Tools::BoxTool.as_stage { |params| done_flag.call params.transform_values(&:class) }
+              BoxTool.as_stage { |params| done_flag.call params.transform_values(&:class) }
             end
             let(:done_flag) { Minitest::Mock.new.expect(:call, nil, [expected_callback_params]) }
             let(:expected_callback_params) do

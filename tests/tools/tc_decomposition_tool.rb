@@ -1,15 +1,15 @@
 require_relative '../test_helper'
-require 'parametric/tools/xyz_tool'
+require 'parametric/tools/decomposition_tool'
 
 module Parametric
   module Tools
-    module XYZTool
+    module DecompositionTool
       class TC_Model < TestUp::TestCase
 
         attr_reader :subject
 
         def setup
-          @subject ||= XYZTool::Model.new(@trn || IDENTITY)
+          @subject ||= Model.new(@trn || IDENTITY)
         end
 
         def test_vectors
@@ -54,7 +54,7 @@ module Parametric
 
         class Tool
           attr_reader :model
-          include XYZTool
+          include DecompositionTool
 
           def done(view); end
         end
@@ -156,7 +156,7 @@ module Parametric
           expected_params = { view: Sketchup::View, vertex: ::Geom::Point3d, vectors: Array,  }
           @done_flag = Minitest::Mock.new.expect(:raise, nil, [expected_params])
           flag = @done_flag
-          @subject = XYZTool.as_stage { |params| flag.raise params.transform_values(&:class) }
+          @subject = DecompositionTool.as_stage { |params| flag.raise params.transform_values(&:class) }
           @subject.activate
           @subject
         end
