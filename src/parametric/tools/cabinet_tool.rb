@@ -15,8 +15,8 @@ module Parametric
 
       include Staged
 
-    DEFAULT_PANEL_PARAMS = {
-      thickness: 16.mm, offset: 0, shift: 0, outside_direction: false, external_bounds: false }.freeze
+      DEFAULT_PANEL_PARAMS = {
+        thickness: 16.mm, offset: 0, shift: 0, outside_direction: false, external_bounds: false }.freeze
 
       def activate
         run
@@ -35,7 +35,7 @@ module Parametric
       end
 
       class BuilderStage
-        attr_reader :when_done
+        attr_accessor :when_done
 
         def initialize(box_params)
           @box_params = box_params
@@ -92,6 +92,13 @@ module Parametric
             update_ui
           when VK_ESCAPE
             when_done&.call()
+          end
+        end
+
+        def onReturn(view)
+          if @model.focused
+            create_panel
+            return view.invalidate
           end
         end
 
@@ -207,18 +214,25 @@ module Parametric
       class PanelBuilder
         class << self
           def build(vertex, *vectors)
-            panel_model = Geom::Box.new vertex, *vectors
-            # x,y,z = vectors.sort_by(&:length)
-            # rot_90 = ::Geom::Transformation.rotation(vertex, x, 90.degrees)
-            # unless y.transform(rot_90).samedirection?(z)
-            #   vertex = vertex.offset(z)
-            #   z = z.reverse
-            # end
+            panel_params = [vertex, vectors].flatten.map(&:clone)
+            origin, axes = panel_params[0], panel_params[1..]
+            z, y, x = axes.sort_by(&:length)
+            rtn_90 = ::Geom::Transformation.rotation origin, z, 90.degrees
+            unless x.transform(rtn_90).samedirection? y
+              origin.offset! y
+              y.reverse!
+            end
+            panel_position = ::Geom::Transformation.new x, y, z, origin
+            panel_model = Geom::Box.new *panel_params
+
             Sketchup.active_model.start_operation 'Add panel'
-            faces = panel_model.sides.map { |side| Sketchup.active_model.entities.add_face *side }
-            panel = Sketchup.active_model.entities.add_group(faces)
+            panel = Sketchup.active_model.entities.add_group
+            panel.transformation = panel_position
+
+            panel_model.sides.each do |side|
+              panel.entities.add_face *side
+            end
             panel.name = 'panel'
-            # panel.transformation = ::Geom::Transformation.new *[x,y,z].map(&:normalize), vertex
             Sketchup.active_model.commit_operation
             panel
           end
@@ -308,14 +322,6 @@ module Parametric
         def initialize(side, offset)
           @side = side
           @target = side.offset offset
-          # offset_transformation = ::Geom::Transformation.rotation(ORIGIN, side.plane.normal, 90.degrees)
-          # offset_values = side.edges.map { |p1, p2| p1.distance(p2) / 3 }.rotate
-          # guides = side.edges.zip(offset_values).map do |(p1, p2), offset_value|
-          #   offset_vector = p1.vector_to(p2).transform(offset_transformation)
-          #   [p1.offset(offset_vector, offset_value), p1.vector_to(p2)]
-          # end
-          # guides_intersections = guides.zip(guides.rotate(-1)).map { |line1, line2| ::Geom.intersect_line_line(line1, line2) }
-          # super guides_intersections
         end
 
         def available?
