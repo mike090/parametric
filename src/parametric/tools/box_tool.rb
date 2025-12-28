@@ -5,15 +5,21 @@ module Parametric
     # helps to define a virtual box
     module BoxTool
       include Staged
-      def self.as_stage(transformation = IDENTITY, &when_done)
-        Stage.new(transformation, &when_done)
+      def self.as_stage(&when_done)
+        Stage.new(&when_done)
+      end
+
+      def self.use
+        tool = as_stage { |box_params| puts box_params }
+        Sketchup.active_model.select_tool tool
+        Sketchup.focus
+        tool
       end
 
       class Stage
         include BoxTool
 
-        def initialize(transformation, &when_done)
-          @transformation = transformation
+        def initialize(&when_done)
           @when_done = when_done
         end
 
@@ -30,7 +36,7 @@ module Parametric
       private
 
       def run
-        using :decomposition_tool, @transformation do |xyz_result|
+        using :decomposition_tool do |xyz_result|
           @model = xyz_result
           if three_dim?
             done(@model.fetch :view)

@@ -11,9 +11,8 @@ module Parametric
         describe BoxTool do
           test_helpers Tools::Helpers
 
-          let(:transformation) { IDENTITY }
           let(:view) { Sketchup.active_model.active_view }
-          let(:decomposition_tool) { mock_tool(decomposition_stage_result, transformation) }
+          let(:decomposition_tool) { mock_tool(decomposition_stage_result) }
           let(:profile) do
             [
               ::Geom::Point3d.new(0,0),
@@ -50,10 +49,7 @@ module Parametric
           describe 'workflow' do
 
             subject do
-              tn = transformation
-              tool_fixture(BoxTool) do
-                @transformation = tn
-              end
+              tool_fixture(BoxTool)
             end
 
             before do
