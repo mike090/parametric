@@ -9,7 +9,7 @@ module Parametric
         attr_reader :subject
 
         def setup
-          @subject ||= Model.new(@trn || IDENTITY)
+          @subject ||= Model.new
         end
 
         def test_vectors
@@ -38,15 +38,6 @@ module Parametric
           assert subject.valid?
           subject.end = ::Geom::Point3d.new(3,4,5)
           assert subject.valid?
-        end
-
-        def test_initial_transformation
-          @trn = ::Geom::Transformation.new ORIGIN.vector_to(::Geom::Point3d.new 1, 2, 3)
-          p_start, p_end = [[0, 0], [2, 3, 4]].map { |params| ::Geom::Point3d.new(params).transform @trn }
-          subject.start = p_start
-          subject.end = p_end
-          expected = [[2,0], [0,3], [0,0,4]].map { |params| ::Geom::Vector3d.new(params).transform @trn }
-          assert_equal expected, subject.vectors
         end
       end
 

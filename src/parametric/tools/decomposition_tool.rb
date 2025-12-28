@@ -3,18 +3,16 @@ require_relative '../geom'
 module Parametric
   module Tools
     module DecompositionTool
-      def self.as_stage(transformation = IDENTITY, &when_done)
-        Stage.new(transformation, &when_done)
+      def self.as_stage(&when_done)
+        Stage.new(&when_done)
       end
 
-      def self.use(transformation = IDENTITY)
-        tool = as_stage(transformation) { |params| tool.reset; params[:view].invalidate }
+      def self.use
+        tool = as_stage { |params| puts params; tool.reset; params[:view].invalidate }
         Sketchup.active_model.select_tool tool
         Sketchup.focus
         tool
       end
-
-      attr_accessor :transformation
 
       def activate
         reset
@@ -107,7 +105,7 @@ module Parametric
 
       def reset
         @mouse = Sketchup::InputPoint.new
-        @model = Model.new(@transformation || IDENTITY)
+        @model = Model.new
         update_ui
         update_vcb_value
       end
@@ -134,16 +132,13 @@ module Parametric
       class Model
         attr_accessor :start, :end
 
-        def initialize(transformation)
-          @transformation = transformation
-        end
-
         def vectors
           return [] unless @start && @end
 
           xyz = @start.vector_to(@end)
-          xyz.transform! @transformation
-          Geom.decompose_vector(xyz).map { |vector| vector.transform @transformation.inverse }
+          current_space = Sketchup.active_model.edit_transform
+          xyz.transform! current_space.inverse
+          Geom.decompose_vector(xyz).map { |vector| vector.transform current_space }
         end
 
         def valid?
@@ -154,8 +149,7 @@ module Parametric
       class Stage
         include DecompositionTool
 
-        def initialize(transformation = IDENTITY, &when_done)
-          @transformation = transformation
+        def initialize(&when_done)
           @when_done = when_done
         end
 
