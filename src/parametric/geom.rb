@@ -10,8 +10,11 @@ module Parametric
   end
 end
 
-class Geom::Transformation
+class ::Geom::Transformation
   def ==(transformation)
-    transformation.instance_of?(::Geom::Transformation) && self.to_a == transformation.to_a
+    transformation.instance_of?(::Geom::Transformation) &&
+      [self.origin, self.xaxis, self.yaxis, self.zaxis] ==
+        [transformation.origin, transformation.xaxis,
+          transformation.yaxis, transformation.zaxis]
   end
 end
