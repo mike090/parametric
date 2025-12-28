@@ -284,7 +284,10 @@ module Parametric
           end
           intersections = bounding_lines.zip(bounding_lines.rotate).map { |line1, line2| ::Geom.intersect_line_line(line1, line2) }
           v0, v1 = intersections[0], intersections[2]
-          Geom.rectangle v0, v0.vector_to(v1)
+          current_space = Sketchup.active_model.edit_transform
+          vector = v0.vector_to(v1).transform(current_space.inverse)
+          vectors = Geom.decompose_vector(vector).map { |vector| vector.transform current_space }
+          Geom::Rectangle.new v0, *vectors
         end
 
         # Returns and save (as focused) the nearest target that has come into focus and hit point. Takes into account the geometry of the model
