@@ -79,6 +79,14 @@ module Parametric
             subject = Box.new *default_params
             assert subject.sides.all? { |side| side.plane.normal.samedirection? out_durection.(center, side) }
           end
+
+          test 'unmutable' do
+            box_params = subject.params
+            cache = box_params.map(&:clone)
+            box_params.first.offset! X_AXIS
+            box_params[1..].map(&:reverse!)
+            assert_equal cache, subject.params.to_a
+          end
         end
       end
     end

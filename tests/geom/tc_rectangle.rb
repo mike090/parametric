@@ -96,10 +96,9 @@ module Parametric
           test '#shift!' do
             shifted = subject.shift! 50
             assert_same subject, shifted
-            assert_equal ::Geom::Point3d.new(100,100,150), shifted.vertex
-            assert_equal default_params[1..], shifted.vectors
+            expected_params = [::Geom::Point3d.new(100,100,150), default_params[1..]].flatten
+            assert_equal expected_params, shifted.params
             assert_nil shifted.instance_variable_get(:@polygon)
-            puts shifted.inspect
             expected_vertices = [[100,100,150],
               [550,670,150]].map { |pos| ::Geom::Point3d.new pos }
             assert_equal expected_vertices, shifted.vertices.slice((0..).step 2)
@@ -131,6 +130,15 @@ module Parametric
             expect(subject).must_be_kind_of Enumerable
             expect(subject).must_respond_to :each
             expect(subject.to_a).must_equal subject.vertices
+          end
+
+          test 'unmutable' do
+            params = subject.params
+            params.first.offset! X_AXIS, 100
+            params[1..].each(&:reverse!)
+            expected_params = [::Geom::Point3d.new(100,100,100),
+              [[450,0,0], [0,570,0]].map { |val| ::Geom::Vector3d.new(val) }].flatten
+            assert_equal expected_params, subject.params
           end
         end
       end

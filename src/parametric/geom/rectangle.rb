@@ -6,8 +6,6 @@ module Parametric
       include Enumerable
       extend Forwardable
 
-      attr_reader :vertex, :vectors
-
       def_delegators :polygon, :each, :vertices, :edges, :center, :point_in?
 
       def initialize(vertex, *vectors)
@@ -62,7 +60,7 @@ module Parametric
       def ==(rectangle)
         return unless rectangle.instance_of? Rectangle
 
-        @vertex == rectangle.vertex && @vectors == rectangle.vectors
+        rectangle.params == self.params
       end
 
       def plane
@@ -71,6 +69,10 @@ module Parametric
 
       def inspect
         "#{super.match(/^[^\s]+/)[0]} #{[@vertex, @vectors].flatten.inspect}>"
+      end
+
+      def params
+        [@vertex, @vectors].flatten.map(&:clone)
       end
 
       private

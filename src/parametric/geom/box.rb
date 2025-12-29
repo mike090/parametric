@@ -2,8 +2,6 @@ module Parametric
   module Geom
     class Box
 
-      attr_reader :vertex, :vectors
-
       def initialize(*params)
         case params.map(&:class)
         when [::Geom::Point3d, ::Geom::Vector3d]
@@ -22,7 +20,7 @@ module Parametric
 
       def sides
         @sides ||= begin
-          v1,v2,v3 = vectors
+          v1,v2,v3 = @vectors
           base = Rectangle.new @vertex, v2, v1
           [base,
           Rectangle.new(@vertex + v1 + v2 + v3, v1.reverse, v2.reverse)] + 
@@ -69,6 +67,10 @@ module Parametric
           pos = vts[0].zip(*vts[1..]).map { |vals| vals.reduce(&:+)/vals.length }
           ::Geom::Point3d.new pos
         end
+      end
+
+      def params
+        [@vertex, @vectors].flatten.map(&:clone)
       end
 
       private
