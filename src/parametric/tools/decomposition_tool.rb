@@ -136,9 +136,8 @@ module Parametric
           return [] unless @start && @end
 
           xyz = @start.vector_to(@end)
-          current_space = Sketchup.active_model.edit_transform
-          xyz.transform! current_space.inverse
-          Geom.decompose_vector(xyz).map { |vector| vector.transform current_space }
+          space = Sketchup.active_model.edit_transform
+          Geom.decompose_vector(xyz, space)
         end
 
         def valid?

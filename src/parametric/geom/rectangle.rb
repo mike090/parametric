@@ -107,8 +107,8 @@ module Parametric
       end
     end
 
-    def self.rectangle(vertex, vector)
-      vectors = decompose_vector(vector)
+    def self.rectangle(vertex, vector, space = IDENTITY)
+      vectors = decompose_vector(vector, space)
       Rectangle.new vertex, *vectors
     end
   end

@@ -1,11 +1,11 @@
 module Parametric
   module Geom
-    def self.decompose_vector(vector)
+    def self.decompose_vector(vector, space = IDENTITY)
       raise ArgumentError, 'Geom::Vector3d expected' unless vector.instance_of?(::Geom::Vector3d)
 
-      vector.to_a.each_with_index.map do |len, index|
+      vector.transform(space.inverse).to_a.each_with_index.map do |len, index|
         ::Geom::Vector3d.new [0,0].insert(index, len)
-      end.select(&:valid?)
+      end.select(&:valid?).map { |vector| vector.transform(space) }
     end
   end
 end
