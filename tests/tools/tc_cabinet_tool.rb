@@ -217,6 +217,45 @@ module Parametric
           end
         end
       end
+
+      class CabinetBuilder
+        module Tests
+          extend Spec::TestsRoot
+
+          describe CabinetBuilder do
+
+            let(:cabinet_lfb) { ::Geom::Point3d.new [100,100,100].map(&:mm) }
+            let(:cabinet_size) { Geom.decompose_vector(::Geom::Vector3d.new([450,570,720].map!(&:mm))) }
+            let(:default_params) { [cabinet_lfb] + cabinet_size }
+            let(:panel_params) do
+              [cabinet_lfb.offset(::Geom::Vector3d.new 16.mm,0,0)] + 
+                [[0,0,16],[450-32,0,0],[0,570,0]].map { |val| ::Geom::Vector3d.new val.map(&:mm) }
+            end
+            subject { CabinetBuilder.new *(@cabinet_params || default_params) }
+
+
+            test_case_name 'TC_CabinetBuilder'
+
+            after { discard_model_changes }
+
+            test 'raises uless parallel space axes' do
+              rot = ::Geom::Transformation.rotation ORIGIN, Z_AXIS, 30.degrees
+              @cabinet_params = [cabinet_lfb] + cabinet_size.map { |vector| vector.transform rot }
+              assert_raises(TypeError) { subject }
+            end
+
+            test '#add_panel' do
+              subject.add_panel *panel_params
+              cabinet = Sketchup.active_model.entities.to_a.last
+
+              assert_instance_of Sketchup::Group, cabinet
+              assert_equal 'cabinet', cabinet.name
+              assert_equal [Sketchup::Group], cabinet.entities.map(&:class)
+              assert_equal 'panel', cabinet.entities.first.name
+            end
+          end
+        end
+      end
     end
   end
 end

@@ -201,42 +201,92 @@ module Parametric
           thickness_vector = center.project_to_plane(@model.focused.plane).vector_to(center)
           thickness_vector.reverse! if params.outside_direction
           thickness_vector.length = params.thickness
-          Geom::Box.new profile.vertex, *profile.vectors, thickness_vector
+          Geom::Box.new *profile.params << thickness_vector
         end
 
         def create_panel
+          Sketchup.active_model.start_operation 'Add panel'
           preview = panel_preview
-          panel = PanelBuilder.build preview.vertex, *preview.vectors
+          panel = builder.add_panel *preview.params
           @model.focused.panel = panel
+          Sketchup.active_model.commit_operation
+        end
+
+        def builder
+          @builder ||= CabinetBuilder.new *@box_params
         end
       end
 
       class PanelBuilder
         class << self
-          def build(vertex, *vectors)
-            panel_params = [vertex, vectors].flatten.map(&:clone)
-            origin, axes = panel_params[0], panel_params[1..]
+          def build(panel_params, entities)
+            transformation = normalize_position(panel_params)
+
+            panel_params.map! { |param| param.transform transformation.inverse }
+            panel_model = Geom::Box.new *panel_params
+
+            panel = entities.add_group
+            panel.transformation = transformation
+
+            panel_model.sides.each do |side|
+              panel.entities.add_face *side
+            end
+            panel.name = 'panel'
+            panel
+          end
+
+          private
+
+          def normalize_position(params)
+            origin, axes = params[0], params[1..]
             z, y, x = axes.sort_by(&:length)
             rtn_90 = ::Geom::Transformation.rotation origin, z, 90.degrees
             unless x.transform(rtn_90).samedirection? y
               origin.offset! y
               y.reverse!
             end
-            panel_position = ::Geom::Transformation.new x, y, z, origin
-            panel_params.map! { |param| param.transform panel_position.inverse }
-            panel_model = Geom::Box.new *panel_params
-
-            Sketchup.active_model.start_operation 'Add panel'
-            panel = Sketchup.active_model.entities.add_group
-            panel.transformation = panel_position
-
-            panel_model.sides.each do |side|
-              panel.entities.add_face *side
-            end
-            panel.name = 'panel'
-            Sketchup.active_model.commit_operation
-            panel
+            ::Geom::Transformation.new(x,y,z,origin)
           end
+        end
+      end
+
+      class CabinetBuilder
+        def initialize(*cabinet_params)
+          @transformation = define_position cabinet_params.map(&:clone)
+        end
+
+        def add_panel(*panel_params)
+          transformation = @transformation.inverse
+          PanelBuilder.build(
+            panel_params.map { |param| param.transform transformation },
+            cabinet.entities
+          )
+        end
+
+        private
+
+        def cabinet
+          @cabinet ||= Sketchup.active_model.active_entities.add_group.tap do |cabinet|
+            cabinet.transformation = @transformation
+            cabinet.name = 'cabinet'
+          end
+        end
+
+        def define_position(params)
+          origin, vectors = params[0], params[1..]
+          workspace = Sketchup.active_model.edit_transform
+          axes = [workspace.xaxis, workspace.yaxis, workspace.zaxis]
+          vectors = axes.map do |axis|
+            vector = vectors.find { |vector| vector.parallel? axis }
+            raise TypeError, "Expected cabinet's bounding edges must be parralel to the space axes" unless vector
+
+            unless vector.samedirection? axis
+              origin.offset! vector
+              vector.reverse!
+            end
+            vector
+          end
+          ::Geom::Transformation.new *vectors, origin
         end
       end
 
@@ -283,11 +333,8 @@ module Parametric
             ].min_by { |point, _line| @hit_point.distance(point) }.last
           end
           intersections = bounding_lines.zip(bounding_lines.rotate).map { |line1, line2| ::Geom.intersect_line_line(line1, line2) }
-          v0, v1 = intersections[0], intersections[2]
-          current_space = Sketchup.active_model.edit_transform
-          vector = v0.vector_to(v1).transform(current_space.inverse)
-          vectors = Geom.decompose_vector(vector).map { |vector| vector.transform current_space }
-          Geom::Rectangle.new v0, *vectors
+          diagonal = intersections[0].vector_to(intersections[2])
+          Geom.rectangle intersections[0], diagonal, Sketchup.active_model.edit_transform
         end
 
         # Returns and save (as focused) the nearest target that has come into focus and hit point. Takes into account the geometry of the model
