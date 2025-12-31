@@ -1,7 +1,7 @@
 require_relative 'polygon'
 module Parametric
   module Geom
-    class Parametric::Geom::Flatten
+    class Flatten
 
       attr_reader :faces
 

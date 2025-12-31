@@ -1,3 +1,4 @@
+require_relative 'geom'
 require_relative 'tools/decomposition_tool'
 require_relative 'tools/push_pull_tool'
 require_relative 'tools/box_tool'

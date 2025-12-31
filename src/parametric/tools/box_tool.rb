@@ -1,3 +1,4 @@
+require_relative '../geom/rectangle'
 require_relative 'staged'
 
 module Parametric
