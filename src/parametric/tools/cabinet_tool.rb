@@ -22,14 +22,21 @@ module Parametric
         run
       end
 
+      def onKeyDown(key, repeat, flags, view)
+        case key
+        when VK_ESCAPE
+          run
+        else
+          try @stage, :onKeyDown, key, repeat, flags, view
+        end
+      end
+
       private
 
       def run
         using :box_tool  do |box_tool_result|
           box_params = box_tool_result.fetch_values(:vertex, :vectors).flatten
           stage = BuilderStage.new box_params
-          tool = self
-          stage.when_done = proc { tool.run }
           use stage
         end
       end
@@ -90,8 +97,6 @@ module Parametric
           when VK_TAB
             params_accessor.next
             update_ui
-          when VK_ESCAPE
-            when_done&.call()
           end
         end
 
